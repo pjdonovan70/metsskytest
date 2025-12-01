@@ -140,8 +140,6 @@
         const TAX_PER_ACRE = 25;
 
         const CROPS = { 'Corn': { name: 'Corn', color: 'bg-yellow-500', plantMonths: [3, 4, 5], steps: ['Primary Tillage', 'Lime', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_corn',seedRate:0.4,fert:0.2,lime:1}, equip:['Planter','Header_Corn'], yield:180, price:4.25 }, 'Soy': { name: 'Soy', color: 'bg-green-600', plantMonths: [4, 5, 6], steps: ['Primary Tillage', 'Lime', 'Secondary Tillage', 'Plant', 'Spray', 'Harvest'], inputs: {seed:'seed_soy',seedRate:1.0,fert:0,lime:0.5}, equip:['Planter','Header_Grain'], yield:55, price:11.40 }, 'Wheat': { name: 'Wheat', color: 'bg-amber-600', plantMonths: [8, 9, 10, 11], steps: ['Primary Tillage', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_wheat',seedRate:2.0,fert:0.15,lime:0}, equip:['Drill','Header_Grain'], yield:85, price:5.60, byproduct:'straw', byYield:1.5 }, 'Hay': { name: 'Alfalfa', color: 'bg-emerald-700', plantMonths: [3, 4, 8], steps: ['Primary Tillage', 'Lime', 'Secondary Tillage', 'Plant', 'Cut', 'Tedder', 'Bale'], inputs: {seed:'seed_hay',seedRate:0.5,fert:0.1,lime:1.5}, equip:['Drill','Mower','Baler'], yield:6, price:180 }, 'Cotton': { name: 'Cotton', color: 'bg-slate-200', plantMonths: [4, 5], steps: ['Primary Tillage', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Spray', 'Harvest'], inputs: { seed: 'seed_cotton', seedRate: 0.2, fert: 0.25, lime:1 }, equip: ['Planter', 'Harvester_Cotton'], yield: 3, price: 85.00 }, 'Rice': { name: 'Rice', color: 'bg-cyan-700', plantMonths: [3, 5], steps: ['Primary Tillage', 'Fertilizer', 'Plant', 'Spray', 'Harvest'], inputs: { seed: 'seed_rice', seedRate: 1.5, fert: 0.4, lime:0 }, equip: ['Drill', 'Header_Grain'], yield: 160, price: 6.80 }, 'Potato': { name: 'Potatoes', color: 'bg-yellow-800', plantMonths: [3, 4], steps: ['Primary Tillage', 'De-Stone', 'Plant', 'Hilling', 'Spray', 'Harvest'], inputs: {seed:'seed_potato',seedRate:20,fert:0.5,lime:0}, equip:['Planter_Potato','Harvester_Potato'], yield:450, price:9.50 }, 'Peanuts': { name: 'Peanuts', color: 'bg-orange-800', plantMonths: [4, 5], steps: ['Tillage', 'Lime', 'Plant', 'Digging', 'Harvest'], inputs: {seed:'seed_peanut',seedRate:1,fert:0.2,lime:0.8}, equip:['Planter','Harvester_Peanut'], yield:4000, price:0.25 }, 'Beets': { name: 'Sugar Beets', color: 'bg-pink-900', plantMonths: [3, 4], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_beet',seedRate:0.5,fert:0.4,lime:1}, equip:['Planter','Harvester_Beet'], yield:30, price:45.00 }, 'Canola': { name: 'Canola', color: 'bg-yellow-400', plantMonths: [7, 8], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_canola',seedRate:0.3,fert:0.3,lime:0.5}, equip:['Drill','Header_Grain'], yield:45, price:13.50 }, 'Oats': { name: 'Oats', color: 'bg-amber-200', plantMonths: [2, 3], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_oats',seedRate:3,fert:0.1,lime:0}, equip:['Drill','Header_Grain'], yield:90, price:3.80 }, 'Barley': { name: 'Barley', color: 'bg-amber-300', plantMonths: [8, 10], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_barley',seedRate:2.5,fert:0.15,lime:0}, equip:['Drill','Header_Grain'], yield:80, price:5.10 }, 'Sorghum': { name: 'Sorghum', color: 'bg-orange-600', plantMonths: [4, 6], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_sorghum',seedRate:0.4,fert:0.2,lime:0}, equip:['Planter','Header_Grain'], yield:110, price:6.20 }, 'Sunflower': { name: 'Sunflower', color: 'bg-yellow-300', plantMonths: [4, 6], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_sunflower',seedRate:0.3,fert:0.2,lime:0}, equip:['Planter','Header_Sunflower'], yield:1800, price:0.22 } };
-        
-        // **FIXED: ADDED TYPE 'SILO' and 'SHED'**
         const BUILDINGS = { 
             'shed_s': { name: 'Small Machine Shed', cost: 65000, category: 'Storage', type: 'Shed', capacity: 5, buildTime: 14 * DAY_MS }, 
             'shed_l': { name: 'Large Machine Shed', cost: 150000, category: 'Storage', type: 'Shed', capacity: 15, buildTime: 30 * DAY_MS }, 
@@ -714,6 +712,8 @@
                     if(def && def.category === 'Infrastructure') fuelCap += def.capacity;
                 });
                 if(grainCap === 0) grainCap = 5000; if(fuelCap === 0) fuelCap = 100;
+                // If machineCap is 0 (unlikely but possible if sold), set to 1 to avoid divide by zero
+                if(machineCap === 0) machineCap = 1;
                 return { cropUsed, grainCap, machineCap, machineUsed: (gameState.inventory||[]).length, fuelCap };
             };
             const getHRRequirements = () => {
@@ -1164,6 +1164,7 @@
                             {gameState.construction.map((c, i) => {
                                 const def = BUILDINGS[c.key];
                                 const timeLeft = Math.max(0, c.endTime - now);
+                                if (!def) return null; // Safety check
                                 return (
                                     <div key={i} className="mb-2 last:mb-0">
                                         <div className="flex justify-between text-white text-xs mb-1">
@@ -1340,6 +1341,11 @@
 
             const renderGarage = () => {
                 const stats = getStorageStats();
+                const storageConstruction = gameState.construction.filter(c => {
+                    const b = BUILDINGS[c.key];
+                    return b && b.category === 'Storage';
+                });
+
                 return (
                     <div className="space-y-6 pb-safe">
                         <h2 className="text-2xl font-bold text-white">Garage</h2>
@@ -1355,16 +1361,18 @@
                                     <button onClick={()=>setModal({type:'build', category:'Storage'})} className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded font-bold text-xs shadow-lg">+ Build Shed</button>
                                 </div>
                             </div>
-                            <div className="absolute bottom-0 left-0 h-1 bg-purple-600/30 transition-all duration-1000" style={{width: `${Math.min(100, (stats.machineUsed/stats.machineCap)*100)}%`}}></div>
+                            {/* Safe Math for Progress Bar */}
+                            <div className="absolute bottom-0 left-0 h-1 bg-purple-600/30 transition-all duration-1000" style={{width: `${Math.min(100, (stats.machineUsed/Math.max(1, stats.machineCap))*100)}%`}}></div>
                         </div>
 
                         {/* Construction Progress (Storage Only) */}
-                        {gameState.construction.filter(c => BUILDINGS[c.key].category === 'Storage').length > 0 && (
+                        {storageConstruction.length > 0 && (
                             <div className="glass-panel p-4 border border-yellow-500/20 bg-yellow-900/10">
                                 <div className="text-yellow-400 text-xs font-bold uppercase mb-2">Under Construction</div>
-                                {gameState.construction.filter(c => BUILDINGS[c.key].category === 'Storage').map((c, i) => {
+                                {storageConstruction.map((c, i) => {
                                     const def = BUILDINGS[c.key];
                                     const timeLeft = Math.max(0, c.endTime - now);
+                                    if(!def) return null;
                                     return (
                                         <div key={i} className="mb-2 last:mb-0">
                                             <div className="flex justify-between text-white text-xs mb-1">
@@ -1391,7 +1399,7 @@
                                     <button onClick={()=>setModal({type:'buy_fuel_garage'})} className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded font-bold text-xs shadow-lg">Order Fuel</button>
                                 </div>
                             </div>
-                            <div className="absolute bottom-0 left-0 h-1 bg-orange-600/30 transition-all duration-1000" style={{width: `${Math.min(100, (gameState.consumables.diesel/stats.fuelCap)*100)}%`}}></div>
+                            <div className="absolute bottom-0 left-0 h-1 bg-orange-600/30 transition-all duration-1000" style={{width: `${Math.min(100, ((gameState.consumables.diesel||0)/Math.max(1, stats.fuelCap))*100)}%`}}></div>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4">
@@ -1425,7 +1433,9 @@
 
              const renderStorage = () => {
                 const stats = getStorageStats();
-                const grainPct = Math.min(100, (stats.cropUsed / stats.grainCap) * 100);
+                // Ensure capacities are at least 1 to avoid divide-by-zero
+                const safeGrainCap = Math.max(1, stats.grainCap);
+                const grainPct = Math.min(100, (stats.cropUsed / safeGrainCap) * 100);
                 
                 return (
                     <div className="space-y-6 pb-safe">
@@ -1756,4 +1766,3 @@
     </script>
 </body>
 </html>
-
