@@ -1,15 +1,3 @@
-This happens because the game is trying to display "Construction Progress" for a building that might not exist in the definitions list anymore, or checking a category on an undefined object. This causes a JavaScript crash, resulting in a blank screen.
-
-Here is the **Fixed Code**.
-
-### **Fixes Applied:**
-1.  **Crash Fix:** Added safety checks to the Construction bar in the Garage. It now safely ignores invalid building data instead of crashing the whole app.
-2.  **Safe Math:** Ensured storage capacity calculations never divide by zero (which can happen if you sell your only machine shed), preventing calculation errors.
-3.  **Fuel & Storage:** Verified the Fuel Depot card and Storage bars are rendering correctly with the new safety checks.
-
-Save this as your `.html` file.
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1778,3 +1766,4 @@ Save this as your `.html` file.
     </script>
 </body>
 </html>
+
