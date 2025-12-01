@@ -1,3 +1,12 @@
+The main reason the screen is loading to blank is that the code calls `{renderModalContent()}` at the very end of the `App` component return statement, but **the function `renderModalContent` is never defined**.
+
+This causes a JavaScript "ReferenceError," which crashes the React application immediately.
+
+Here is the **fixed, complete HTML file**. I have added the missing `renderModalContent` logic to handle the game's interaction menus (Field work, selling crops, maintenance, etc.).
+
+You can copy and save this as an `.html` file.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1140,6 +1149,170 @@
                 </div>
             );
 
+            // --- THE MISSING MODAL FUNCTION ---
+            const renderModalContent = () => {
+                if(!modal) return null;
+                
+                const closeModal = () => setModal(null);
+                
+                // --- FIELD MODAL ---
+                if(modal.type === 'field') {
+                    let nextStep = modal.state;
+                    if(modal.state === 'Fallow' || modal.state === 'Stubble') nextStep = 'Primary Tillage';
+                    else if(modal.state === 'Ready') nextStep = 'Harvest';
+                    else if(modal.state === 'Growing') return null; // Can't work on growing fields
+
+                    const req = getJobRequirements('field', nextStep, modal.crop);
+                    
+                    return (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
+                            <div className="glass-panel w-full max-w-lg p-6 relative" onClick={e=>e.stopPropagation()}>
+                                <h2 className="text-xl font-bold text-white mb-4">Field Operation: {nextStep}</h2>
+                                <div className="space-y-4">
+                                    {req.trCat.length > 0 && (
+                                        <RenderSelect 
+                                            label="Tractor" 
+                                            categories={req.trCat} 
+                                            inventory={gameState.inventory} 
+                                            activeJobs={gameState.activeJobs} 
+                                            selected={modal.selectedTR} 
+                                            onChange={v => setModal(p => ({...p, selectedTR: v}))} 
+                                        />
+                                    )}
+                                    {req.impCat.length > 0 && (
+                                        <RenderSelect 
+                                            label="Implement" 
+                                            categories={req.impCat} 
+                                            inventory={gameState.inventory} 
+                                            activeJobs={gameState.activeJobs} 
+                                            selected={modal.selectedImp} 
+                                            onChange={v => setModal(p => ({...p, selectedImp: v}))} 
+                                        />
+                                    )}
+                                    <div className="text-slate-400 text-xs font-bold uppercase mt-2">Operator</div>
+                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp || ""} onChange={e => setModal(p => ({...p, selectedEmp: e.target.value}))}>
+                                        <option value="">-- Select Staff --</option>
+                                        {gameState.employees.filter(e => req.role.includes(e.role) && e.status === 'Idle').map(e => (
+                                            <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
+                                        ))}
+                                    </select>
+
+                                    {/* Harvest Logistics (Trucks) */}
+                                    {req.needsTransport && (
+                                        <div className="pt-4 border-t border-white/10">
+                                            <div className="text-emerald-400 text-xs font-bold mb-2">TRANSPORT TEAM</div>
+                                            <RenderSelect label="Truck/Tractor" categories={['Truck','Tractor']} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedTR2} onChange={v => setModal(p => ({...p, selectedTR2: v}))} />
+                                            <div className="mt-2"><RenderSelect label="Trailer" categories={['Trailer']} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedImp2} onChange={v => setModal(p => ({...p, selectedImp2: v}))} /></div>
+                                            <div className="mt-2">
+                                                <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp2 || ""} onChange={e => setModal(p => ({...p, selectedEmp2: e.target.value}))}>
+                                                    <option value="">-- Truck Driver --</option>
+                                                    {gameState.employees.filter(e => e.status === 'Idle' && e.id != modal.selectedEmp).map(e => (
+                                                        <option key={e.id} value={e.id}>{e.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <button onClick={() => startFieldJob(modal.id, modal.crop)} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg mt-4">START JOB</button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // --- CHORE MODAL ---
+                if(modal.type === 'chore') {
+                    const req = getJobRequirements(modal.job === 'snow' ? 'snow' : 'chore', modal.job);
+                    return (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
+                            <div className="glass-panel w-full max-w-lg p-6 relative" onClick={e=>e.stopPropagation()}>
+                                <h2 className="text-xl font-bold text-white mb-4 capitalize">{modal.job} Task</h2>
+                                <div className="space-y-4">
+                                    <RenderSelect label="Machine" categories={req.trCat} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedTR} onChange={v => setModal(p => ({...p, selectedTR: v}))} />
+                                    {req.impCat.length > 0 && <RenderSelect label="Implement" categories={req.impCat} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedImp} onChange={v => setModal(p => ({...p, selectedImp: v}))} />}
+                                    
+                                    <div className="text-slate-400 text-xs font-bold uppercase mt-2">Worker</div>
+                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp || ""} onChange={e => setModal(p => ({...p, selectedEmp: e.target.value}))}>
+                                        <option value="">-- Select Staff --</option>
+                                        {gameState.employees.filter(e => req.role.includes(e.role) && e.status === 'Idle').map(e => (
+                                            <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
+                                        ))}
+                                    </select>
+                                    <button onClick={startChore} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg">START</button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // --- MISC JOB MODAL ---
+                if(modal.type === 'misc') {
+                    const job = MISC_JOBS.find(j => j.id === modal.jobId);
+                    return (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
+                            <div className="glass-panel w-full max-w-lg p-6 relative" onClick={e=>e.stopPropagation()}>
+                                <h2 className="text-xl font-bold text-white mb-4">{job.name}</h2>
+                                <div className="space-y-4">
+                                    {job.req && <RenderSelect label="Required Equipment" categories={[job.req]} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedTR} onChange={v => setModal(p => ({...p, selectedTR: v}))} />}
+                                    <div className="text-slate-400 text-xs font-bold uppercase mt-2">Assign Worker</div>
+                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp || ""} onChange={e => setModal(p => ({...p, selectedEmp: e.target.value}))}>
+                                        <option value="">-- Select Staff --</option>
+                                        {gameState.employees.filter(e => (e.role === job.role || e.role === 'Hand') && e.status === 'Idle').map(e => (
+                                            <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
+                                        ))}
+                                    </select>
+                                    <button onClick={startMiscJob} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg">START WORK</button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // --- MAINTENANCE MODAL ---
+                if(modal.type === 'maintenance') {
+                    return (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
+                            <div className="glass-panel w-full max-w-lg p-6 relative" onClick={e=>e.stopPropagation()}>
+                                <h2 className="text-xl font-bold text-white mb-4">Equipment Service</h2>
+                                <div className="space-y-4">
+                                    <div className="text-slate-400 text-xs font-bold uppercase mt-2">Assign Mechanic</div>
+                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp || ""} onChange={e => setModal(p => ({...p, selectedEmp: e.target.value}))}>
+                                        <option value="">-- Select Mechanic --</option>
+                                        {gameState.employees.filter(e => e.role === 'Mech' && e.status === 'Idle').map(e => (
+                                            <option key={e.id} value={e.id}>{e.name}</option>
+                                        ))}
+                                    </select>
+                                    <button onClick={startMaintenance} className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-lg">START SERVICE (${SERVICE_COST})</button>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // --- SELL MODAL ---
+                if(modal.type === 'sell_spot') {
+                    return (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
+                            <div className="glass-panel w-full max-w-md p-6 relative" onClick={e=>e.stopPropagation()}>
+                                <h2 className="text-xl font-bold text-white mb-4">Sell {modal.crop}</h2>
+                                <p className="text-slate-400 mb-4">Current Price: ${modal.price.toFixed(2)}</p>
+                                <input type="number" className="w-full bg-slate-900 border border-slate-700 p-3 rounded text-white mb-4" placeholder="Amount to sell..." value={sellAmount} onChange={e => setSellAmount(e.target.value)} />
+                                <button onClick={() => sellSpot(modal.crop)} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg">CONFIRM SALE</button>
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
+                        <div className="glass-panel p-6">
+                            <h2 className="text-white font-bold">Menu</h2>
+                            <button onClick={closeModal} className="mt-4 bg-slate-700 text-white px-4 py-2 rounded">Close</button>
+                        </div>
+                    </div>
+                );
+            };
 
             // RENDER
             if (isLoading) return <div className="h-screen flex items-center justify-center text-white font-black animate-pulse">CONNECTING...</div>;
@@ -1195,6 +1368,7 @@
                         </div>
                     </div>
                     
+                    {/* Fixed: This function is now defined */}
                     {renderModalContent()}
                 </div>
             );
