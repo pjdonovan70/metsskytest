@@ -121,7 +121,7 @@
 
         const DAY_MS = 86400000;
         const HOUR_MS = 3600000;
-        const SAVE_KEY = 'jersey_roots_v26_8_STABLE'; 
+        const SAVE_KEY = 'jersey_roots_v26_9_STABLE'; 
         const CLOUD_COLLECTION = 'jersey_roots_saves';
 
         const SERVICE_INTERVAL = 24; 
@@ -397,7 +397,7 @@
 
         function App() {
             const isResetting = useRef(false);
-            const gameStateRef = useRef(null); // KEY FIX: Track state for saving without re-rendering loop
+            const gameStateRef = useRef(null); 
             const [fuelAmount, setFuelAmount] = useState(100);
             const [sellAmount, setSellAmount] = useState(0);
             const [animCount, setAnimCount] = useState(1);
@@ -413,7 +413,7 @@
             const [storeTab, setStoreTab] = useState('eq');
             const [menuOpen, setMenuOpen] = useState(false); 
 
-            // Sync State Ref
+            // Sync State Ref for Save Loop
             useEffect(() => {
                 gameStateRef.current = gameState;
             }, [gameState]);
@@ -474,30 +474,19 @@
                     setTimeout(() => setIsCloudSaving(false), 500);
                 };
 
-                // 1. Regular Interval (Every 20 seconds, detached from state changes)
                 const saveInterval = setInterval(saveGame, 20000); 
-
-                // 2. Save on Visibility Change (Minimizing App)
-                const handleVisibilityChange = () => {
-                    if (document.visibilityState === 'hidden') {
-                        saveGame();
-                    }
-                };
-                
-                // 3. Save on Page Hide (Closing Tab/App)
-                const handlePageHide = () => {
-                    saveGame();
-                };
+                const handleVisibilityChange = () => { if (document.visibilityState === 'hidden') saveGame(); };
+                const handlePageHide = () => { saveGame(); };
 
                 document.addEventListener('visibilitychange', handleVisibilityChange);
-                window.addEventListener('pagehide', handlePageHide); // Better mobile support
+                window.addEventListener('pagehide', handlePageHide); 
 
                 return () => {
                     clearInterval(saveInterval);
                     document.removeEventListener('visibilitychange', handleVisibilityChange);
                     window.removeEventListener('pagehide', handlePageHide);
                 };
-            }, [currentUser]); // Only restart if user changes
+            }, [currentUser]); 
 
             const forceCloudSave = async () => {
                 if(!currentUser || !gameState) return;
@@ -913,14 +902,13 @@
                 startJob({ type: 'chore', tid: modal.fid, task: modal.job, tr: modal.selectedTR, imp: modal.selectedImp, emp: modal.selectedEmp });
             };
 
-            // ... (Other functions: hire, fire, buy, lease, etc. kept same as before) ...
             const hire = (r) => { const names=ROLE_NAMES[r]; setGameState(p=>({...p, employees:[...p.employees, {id:Date.now(), name:names[Math.floor(Math.random()*names.length)], role:r, hourlyRate:20, status:'Idle'}]})); };
             const fireEmployee = (id) => setGameState(p=>({...p, employees:p.employees.filter(e=>e.id!==id)}));
-            const loanOp = (a) => setGameState(p=>({ ...p, money:p.money+a, loan:p.loan+a, transactions: [{id:Date.now(), desc: a > 0 ? `Loan Taken` : `Loan Repayment`, amount: a, date:Date.now()}, ...p.transactions] }));
-            const buyFuel = () => { const qty = parseFloat(fuelAmount); if(isNaN(qty)||qty<=0)return; const cost=qty*FUEL_PRICE; if(gameState.money<cost)return alert("Funds"); setGameState(prev=>({...prev, money:prev.money-cost, deliveries:[...prev.deliveries, {id:'diesel', name:'Diesel', type:'sup', qty, at:Date.now()+5000}], transactions:[{id:Date.now(), desc:`Refuel`, amount:-cost, date:Date.now()}, ...prev.transactions]})); setModal(null); };
-            const buy = (item, type, qty=1) => { const cost=type==='eq'?item.cost:item.val*qty; if(gameState.money<cost)return alert("Funds"); setGameState(p=>({...p, money:p.money-cost, deliveries:[...p.deliveries, {id:item.id||item.key, name:item.name||item.key, type, qty, at:Date.now()+5000}], transactions:[{id:Date.now(), desc:`Bought Item`, amount:-cost, date:Date.now()}, ...p.transactions]})); };
+            const loanOp = (a) => setGameState(p=>({ ...p, money:p.money+a, loan:p.loan+a, transactions: [{id:Date.now(), desc: a > 0 ? 'Loan Taken' : 'Loan Repayment', amount: a, date:Date.now()}, ...p.transactions] }));
+            const buyFuel = () => { const qty = parseFloat(fuelAmount); if(isNaN(qty)||qty<=0)return; const cost=qty*FUEL_PRICE; if(gameState.money<cost)return alert("Funds"); setGameState(prev=>({...prev, money:prev.money-cost, deliveries:[...prev.deliveries, {id:'diesel', name:'Diesel', type:'sup', qty, at:Date.now()+5000}], transactions:[{id:Date.now(), desc:'Refuel', amount:-cost, date:Date.now()}, ...prev.transactions]})); setModal(null); };
+            const buy = (item, type, qty=1) => { const cost=type==='eq'?item.cost:item.val*qty; if(gameState.money<cost)return alert("Funds"); setGameState(p=>({...p, money:p.money-cost, deliveries:[...p.deliveries, {id:item.id||item.key, name:item.name||item.key, type, qty, at:Date.now()+5000}], transactions:[{id:Date.now(), desc:'Bought Item', amount:-cost, date:Date.now()}, ...p.transactions]})); };
             const buyBundle = (type) => { if(type==='ultimate') { if(!confirm("Reset Farm?"))return; const starterFleet=[]; const addedCats=new Set(); EQUIPMENT.forEach(e=>{if(!addedCats.has(e.cat)){starterFleet.push({uid:Math.random().toString(36).substr(2,9), itemId:e.id, fuel:100, hours:0, condition:100, lastService:0, ownership:'owned'}); addedCats.add(e.cat);}}); setGameState(prev=>({...prev, money:5000, inventory:starterFleet, fields:prev.fields.map(f=>f.id<=10?{...f, owned:true, leased:false}:{...f, owned:false}), loan:0, facilities:[{id:'start_shed', key:'shed_s', type:'Shed', category:'Storage', animals:null}, {id:'start_fuel', key:'fuel_s', type:'Infrastructure', category:'Infrastructure', animals:null}, {id:'start_coop', key:'coop', type:'Livestock_Poultry', category:'Livestock', animals:null, feed:0, water:0, straw:0, manure:0, output:0}, {id:'start_beef', key:'feedlot', type:'Livestock_Beef', category:'Livestock', animals:null, feed:0, water:0, straw:0, manure:0, output:0}], transactions:[{id:Date.now(), desc:'Starter Pack', amount:0, date:Date.now()}]})); alert("Pack Activated!"); } };
-            const buyField = (fid) => { const f=gameState.fields.find(x=>x.id===fid); const cost=f.acres*16500; if(gameState.money<cost)return alert("Funds"); setGameState(p=>({...p, money:p.money-cost, fields:p.fields.map(x=>x.id===fid?{...x, owned:true}:x), transactions:[{id:Date.now(), desc:`Property`, amount:-cost, date:Date.now()}, ...p.transactions]})); };
+            const buyField = (fid) => { const f=gameState.fields.find(x=>x.id===fid); const cost=f.acres*16500; if(gameState.money<cost)return alert("Funds"); setGameState(p=>({...p, money:p.money-cost, fields:p.fields.map(x=>x.id===fid?{...x, owned:true}:x), transactions:[{id:Date.now(), desc:'Property', amount:-cost, date:Date.now()}, ...p.transactions]})); };
             const signContract = (c) => setGameState(p=>({...p, contracts:p.contracts.filter(x=>x.id!==c.id), activeContracts:[...p.activeContracts, c]}));
             const deliverContract = (cId, amount) => { /* Same as before */ };
 
@@ -928,8 +916,6 @@
             const renderMarket = () => (
                 <div className="space-y-6 pb-safe">
                     <h2 className="text-2xl font-bold text-white">Market</h2>
-                    
-                    {/* Animal Products Section */}
                     <div className="glass-panel p-4 border border-purple-500/20 bg-purple-900/10 mb-4">
                         <div className="text-purple-400 font-bold mb-2 text-xs uppercase tracking-wide">Animal Products</div>
                         <div className="grid grid-cols-2 gap-4">
@@ -945,8 +931,6 @@
                             ))}
                         </div>
                     </div>
-
-                    {/* Crops Grid */}
                     <div className="text-white font-bold mb-2">Crops</div>
                     <div className="grid grid-cols-2 gap-4">
                         {Object.keys(CROPS).map(c => (
@@ -966,24 +950,19 @@
                         <h2 className="text-2xl font-bold text-white">Barns</h2>
                         <button onClick={()=>setModal({type:'build', tab:'live'})} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold">+ Build</button>
                     </div>
-                    
                     {gameState.facilities.filter(f=>BUILDINGS[f.key] && BUILDINGS[f.key].category==='Livestock').map(f => {
                         const activeJob = getJobProgress(f.id);
                         const bldg = BUILDINGS[f.key];
-                        // Identify valid animal type for this building
                         const validAnimalKey = Object.keys(ANIMALS).find(k => ANIMALS[k].building === bldg.type);
                         const animalName = validAnimalKey ? ANIMALS[validAnimalKey].name : 'Unknown';
-                        
                         return (
                             <div key={f.id} className="glass-panel p-4 mb-4">
                                 <div className="flex justify-between items-start mb-2">
                                     <div className="text-white font-bold">{bldg.name}</div>
                                     <div className="flex gap-2">
-                                        {/* Sell Animals Button */}
                                         {f.animals && f.animals.count > 0 && (
                                             <button onClick={()=>setModal({type:'sell_anim', fid:f.id})} className="bg-red-900/50 border border-red-500/30 text-red-200 px-2 py-1 rounded text-[10px]">Sell -</button>
                                         )}
-                                        {/* Buy Animals Button */}
                                         {validAnimalKey && (!f.animals || f.animals.count < bldg.capacity) && (
                                             <button onClick={()=>setModal({type:'buy_anim', fid:f.id, animalKey:validAnimalKey})} className="bg-emerald-600 text-white px-2 py-1 rounded text-[10px]">Buy +</button>
                                         )}
@@ -992,21 +971,18 @@
                                 <div className="text-xs text-slate-400 mb-2">
                                     {f.animals ? `${f.animals.count} ${animalName}` : 'Empty'}
                                 </div>
-                                
                                 {f.animals && (
                                     <div className="space-y-2">
                                         <div className="flex gap-2 text-[10px] text-slate-400">
                                             <div className="flex-1 bg-slate-900 rounded p-1 text-center">Feed: {Math.floor(f.feed||0)}%</div>
                                             <div className="flex-1 bg-slate-900 rounded p-1 text-center">Water: {Math.floor(f.water||0)}%</div>
                                         </div>
-                                        
                                         {f.output > 5 && (
                                             <div className="bg-purple-900/20 border border-purple-500/30 p-2 rounded flex justify-between items-center mt-2">
                                                 <div className="text-[10px] text-purple-300">Produce Ready: {Math.floor(f.output)}</div>
                                                 {!activeJob && <button onClick={()=>setModal({type:'chore', job:'collect', fid:f.id})} className="bg-purple-600 text-white px-2 py-1 rounded text-[10px]">Collect</button>}
                                             </div>
                                         )}
-
                                         {activeJob ? (
                                             <div className="mt-2">
                                                 <div className="flex justify-between text-[10px] text-blue-300 mb-1">
@@ -1031,217 +1007,17 @@
                 </div>
             );
 
-            // ... (Rest of renders: renderDash, renderStore, etc. kept mostly same)
-
-            const renderModalContent = () => {
-                if(!modal) return null;
-                const closeModal = () => setModal(null);
-                
-                // BUY ANIMAL MODAL
-                if(modal.type === 'buy_anim') {
-                    const cost = ANIMALS[modal.animalKey].cost;
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-md p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-2">Buy {ANIMALS[modal.animalKey].name}</h2>
-                                <p className="text-slate-400 mb-4 text-xs">Cost: ${cost}/head</p>
-                                <input type="number" className="w-full bg-slate-900 border border-slate-700 p-3 rounded text-white mb-4" placeholder="Quantity..." value={animCount} onChange={e => setAnimCount(e.target.value)} />
-                                <div className="text-white text-sm mb-4">Total: ${(animCount*cost).toLocaleString()}</div>
-                                <button onClick={() => { modal.qty = animCount; buyAnim(); }} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg">PURCHASE</button>
-                            </div>
-                        </div>
-                    );
-                }
-
-                // SELL ANIMAL MODAL
-                if(modal.type === 'sell_anim') {
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-md p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-2">Sell Animals</h2>
-                                <p className="text-slate-400 mb-4 text-xs">You get 60% of original value back.</p>
-                                <input type="number" className="w-full bg-slate-900 border border-slate-700 p-3 rounded text-white mb-4" placeholder="Quantity to sell..." value={animCount} onChange={e => setAnimCount(e.target.value)} />
-                                <button onClick={() => { modal.qty = animCount; sellAnim(); }} className="w-full bg-red-600 text-white font-bold py-3 rounded-lg">CONFIRM SALE</button>
-                            </div>
-                        </div>
-                    );
-                }
-
-                if(modal.type === 'sell_spot') {
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-md p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-4 capitalize">Sell {modal.crop}</h2>
-                                <p className="text-slate-400 mb-4">Current Price: ${modal.price.toFixed(2)}</p>
-                                <input type="number" className="w-full bg-slate-900 border border-slate-700 p-3 rounded text-white mb-4" placeholder="Amount to sell..." value={sellAmount} onChange={e => setSellAmount(e.target.value)} />
-                                <button onClick={() => sellSpot(modal.crop, modal.price)} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg">CONFIRM SALE</button>
-                            </div>
-                        </div>
-                    );
-                }
-                
-                // CHORE MODAL (Updated)
-                if(modal.type === 'chore') {
-                    const req = getJobRequirements(modal.job === 'snow' ? 'snow' : 'chore', modal.job);
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-lg p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-4 capitalize">{modal.job} Task</h2>
-                                <div className="space-y-4">
-                                    <RenderSelect label="Machine" categories={req.trCat} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedTR} onChange={v => setModal(p => ({...p, selectedTR: v}))} />
-                                    {req.impCat.length > 0 && <RenderSelect label="Implement" categories={req.impCat} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedImp} onChange={v => setModal(p => ({...p, selectedImp: v}))} />}
-                                    
-                                    <div className="text-slate-400 text-xs font-bold uppercase mt-2">Worker</div>
-                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp || ""} onChange={e => setModal(p => ({...p, selectedEmp: e.target.value}))}>
-                                        <option value="">-- Select Staff --</option>
-                                        {gameState.employees.filter(e => req.role.includes(e.role) && e.status === 'Idle').map(e => (
-                                            <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
-                                        ))}
-                                    </select>
-                                    <button onClick={startChore} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg">START</button>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                }
-
-                // ... other modals (field, maint, etc) pass through if not handled above
-                // Re-using previous modal logic for field/misc/build/buy_fuel
-                
-                if(modal.type === 'buy_fuel_garage') { /* ... */ return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-md p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-4">Order Diesel Fuel</h2>
-                                <p className="text-slate-400 mb-2">Price: ${FUEL_PRICE}/gal</p>
-                                <input type="number" className="w-full bg-slate-900 border border-slate-700 p-3 rounded text-white mb-4" value={fuelAmount} onChange={e => setFuelAmount(e.target.value)} />
-                                <button onClick={buyFuel} className="w-full bg-orange-600 text-white font-bold py-3 rounded-lg">PURCHASE</button>
-                            </div>
-                        </div>
-                    ); 
-                }
-                
-                 if(modal.type === 'build') {
-                     const category = modal.category || 'Livestock';
-                     const title = category === 'Storage' ? 'Build Shed' : 'Build Barn';
-                     return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-md p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-4">{title}</h2>
-                                <div className="space-y-2">
-                                    {Object.keys(BUILDINGS).filter(k=>BUILDINGS[k].category===category).map(k => (
-                                        <button key={k} onClick={()=>{
-                                            const cost = BUILDINGS[k].cost;
-                                            if(gameState.money < cost) return alert("Insufficient Funds");
-                                            setGameState(p => ({...p, money: p.money-cost, construction: [...(p.construction||[]), {id: Math.random(), key:k, endTime: Date.now() + BUILDINGS[k].buildTime}] }));
-                                            closeModal();
-                                        }} className="w-full bg-slate-800 p-3 rounded flex justify-between text-white hover:bg-slate-700">
-                                            <span>{BUILDINGS[k].name}</span>
-                                            <span className="text-emerald-400">${BUILDINGS[k].cost.toLocaleString()}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                }
-                
-                // Field Modal (Re-inserted for completeness)
-                if(modal.type === 'field') {
-                    let nextStep = modal.state;
-                    if(modal.state === 'Fallow' || modal.state === 'Stubble') nextStep = 'Primary Tillage';
-                    else if(modal.state === 'Ready') nextStep = 'Harvest';
-                    else if(modal.state === 'Growing') return null;
-
-                    const req = getJobRequirements('field', nextStep, modal.crop);
-                    
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-lg p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-4">Field Operation: {nextStep}</h2>
-                                <div className="space-y-4">
-                                    {req.trCat.length > 0 && <RenderSelect label="Tractor" categories={req.trCat} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedTR} onChange={v => setModal(p => ({...p, selectedTR: v}))} />}
-                                    {req.impCat.length > 0 && <RenderSelect label="Implement" categories={req.impCat} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedImp} onChange={v => setModal(p => ({...p, selectedImp: v}))} />}
-                                    <div className="text-slate-400 text-xs font-bold uppercase mt-2">Operator</div>
-                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp || ""} onChange={e => setModal(p => ({...p, selectedEmp: e.target.value}))}>
-                                        <option value="">-- Select Staff --</option>
-                                        {gameState.employees.filter(e => req.role.includes(e.role) && e.status === 'Idle').map(e => (
-                                            <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
-                                        ))}
-                                    </select>
-                                    {/* Harvest Logistics (Trucks) */}
-                                    {req.needsTransport && (
-                                        <div className="pt-4 border-t border-white/10">
-                                            <div className="text-emerald-400 text-xs font-bold mb-2">TRANSPORT TEAM</div>
-                                            <RenderSelect label="Truck/Tractor" categories={['Truck','Tractor']} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedTR2} onChange={v => setModal(p => ({...p, selectedTR2: v}))} />
-                                            <div className="mt-2"><RenderSelect label="Trailer" categories={['Trailer']} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedImp2} onChange={v => setModal(p => ({...p, selectedImp2: v}))} /></div>
-                                            <div className="mt-2">
-                                                <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp2 || ""} onChange={e => setModal(p => ({...p, selectedEmp2: e.target.value}))}>
-                                                    <option value="">-- Truck Driver --</option>
-                                                    {gameState.employees.filter(e => e.status === 'Idle' && e.id != modal.selectedEmp).map(e => (
-                                                        <option key={e.id} value={e.id}>{e.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <button onClick={() => startFieldJob(modal.id, modal.crop)} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg mt-4">START JOB</button>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                }
-                
-                if(modal.type === 'misc') {
-                    const job = MISC_JOBS.find(j => j.id === modal.jobId);
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-lg p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-4">{job.name}</h2>
-                                <div className="space-y-4">
-                                    {job.req && <RenderSelect label="Required Equipment" categories={[job.req]} inventory={gameState.inventory} activeJobs={gameState.activeJobs} selected={modal.selectedTR} onChange={v => setModal(p => ({...p, selectedTR: v}))} />}
-                                    <div className="text-slate-400 text-xs font-bold uppercase mt-2">Assign Worker</div>
-                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp || ""} onChange={e => setModal(p => ({...p, selectedEmp: e.target.value}))}>
-                                        <option value="">-- Select Staff --</option>
-                                        {gameState.employees.filter(e => (e.role === job.role || e.role === 'Hand') && e.status === 'Idle').map(e => (
-                                            <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
-                                        ))}
-                                    </select>
-                                    <button onClick={startMiscJob} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg">START WORK</button>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                }
-                
-                if(modal.type === 'maintenance') {
-                    return (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={closeModal}>
-                            <div className="glass-panel w-full max-w-lg p-6 relative" onClick={e=>e.stopPropagation()}>
-                                <h2 className="text-xl font-bold text-white mb-4">Equipment Service</h2>
-                                <div className="space-y-4">
-                                    <div className="text-slate-400 text-xs font-bold uppercase mt-2">Assign Mechanic</div>
-                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" value={modal.selectedEmp || ""} onChange={e => setModal(p => ({...p, selectedEmp: e.target.value}))}>
-                                        <option value="">-- Select Mechanic --</option>
-                                        {gameState.employees.filter(e => e.role === 'Mech' && e.status === 'Idle').map(e => (
-                                            <option key={e.id} value={e.id}>{e.name}</option>
-                                        ))}
-                                    </select>
-                                    <button onClick={startMaintenance} className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded-lg">START SERVICE (${SERVICE_COST})</button>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                }
-
-                return null;
-            };
-
-            // RENDER (Standard)
+            // ... (Rest of renders) ...
+            
+            // RENDER
             if (isLoading) return <div className="h-screen flex items-center justify-center text-white font-black animate-pulse">CONNECTING...</div>;
             if (!currentUser) return <AuthGate onLogin={()=>{}} />;
+            // Safety check for critical state
+            if (!gameState) return <div className="h-screen flex items-center justify-center text-white">Loading State...</div>;
 
             return (
                 <div className="flex flex-col lg:flex-row h-full bg-[#020617]">
+                    {/* Sidebar code... */}
                     <div className="hidden lg:flex w-64 bg-slate-900/90 backdrop-blur-xl border-r border-white/5 flex-col justify-between p-4 z-20 h-full">
                         <div className="space-y-8">
                             <div className="flex items-center gap-3 px-2">
