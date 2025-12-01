@@ -586,16 +586,21 @@
                         });
                         const pendingConst = construction.filter(c => ct < c.endTime);
 
+                        // --- DELIVERY LOGIC (FIXED) ---
                         const arrivedDel = deliveries.filter(d => ct >= d.at);
                         arrivedDel.forEach(d => {
-                            if(d.type === 'eq') inventory.push({uid:Math.random().toString(36).substr(2,9), itemId:d.id, fuel: 100, hours:0, condition:100, lastService:0, ownership: d.mode === 'lease' ? 'leased' : 'owned'});
-                            else if(d.type === 'anim') facilities = facilities.map(f => f.id === d.targetId ? { ...f, animals: { type: f.animals ? f.animals.type : d.id, count: (f.animals ? f.animals.count : 0) + d.qty } } : f);
-                            else consumables[d.id] = (consumables[d.id]||0) + d.qty;
+                            if(d.type === 'eq') {
+                                inventory.push({uid:Math.random().toString(36).substr(2,9), itemId:d.id, fuel: 100, hours:0, condition:100, lastService:0, ownership: d.mode === 'lease' ? 'leased' : 'owned'});
+                            } else if(d.type === 'anim') {
+                                facilities = facilities.map(f => f.id === d.targetId ? { ...f, animals: { type: f.animals ? f.animals.type : d.id, count: (f.animals ? f.animals.count : 0) + d.qty } } : f);
+                            } else {
+                                // FIX: Correctly update consumables map
+                                consumables = { ...consumables, [d.id]: (consumables[d.id]||0) + d.qty };
+                            }
                         });
                         const pendingDel = deliveries.filter(d => ct < d.at);
 
                         activeJobs.forEach(j => {
-                            // ROBUST CHECK: If time is up OR if it's way past due (offline handling)
                             if(ct - j.start >= j.dur) { finished.push(j); } 
                             else { 
                                 jobs.push(j);
@@ -614,9 +619,7 @@
                             }
                         });
 
-                        // --- ROBUST JOB COMPLETION ---
                         finished.forEach(j => {
-                            // Ensure safe removal even if target is gone
                             try {
                                 employees = employees.map(e => (e.id === j.emp || e.id === j.emp2) ? {...e, status:'Idle'} : e);
                                 
@@ -642,7 +645,6 @@
                                 
                                 if(j.type === 'chore') {
                                     facilities = facilities.map(fac => {
-                                        // Compare IDs loosely in case of number/string mismatch
                                         if(fac.id == j.tid) {
                                             if(j.task === 'feed') return {...fac, feed: Math.min(100, fac.feed+100)}; 
                                             if(j.task === 'water') return {...fac, water: Math.min(100, fac.water+100)};
@@ -660,17 +662,14 @@
                         facilities = facilities.map(f => {
                             if(!f.animals) return f;
                             const def = ANIMALS[f.animals.type];
-                            // Safety Check
                             if (!def) return f;
                             
                             const c = f.animals.count;
-                            
-                            // --- ADJUSTED METABOLISM (Fixed Chicken Issue) ---
-                            let consumption = 0.01; // Default (Cow)
-                            if(f.animals.type === 'hen') consumption = 0.0005; // 20x less per animal
-                            if(f.animals.type === 'sheep') consumption = 0.002; // 5x less
-                            if(f.animals.type === 'pig') consumption = 0.0025; // 4x less
-                            if(f.animals.type === 'steer') consumption = 0.008; // 1.2x less
+                            let consumption = 0.01; 
+                            if(f.animals.type === 'hen') consumption = 0.0005; 
+                            if(f.animals.type === 'sheep') consumption = 0.002; 
+                            if(f.animals.type === 'pig') consumption = 0.0025; 
+                            if(f.animals.type === 'steer') consumption = 0.008; 
                             
                             const decay = consumption * c;
                             
@@ -1552,6 +1551,7 @@
             );
             
             const renderLive = () => {
+                // SAFETY CHECK: Filter out buildings that don't exist in our BUILDINGS list to prevent crash
                 const activeFacilities = (gameState.facilities||[]).filter(f => BUILDINGS[f.key] && BUILDINGS[f.key].category === 'Livestock');
                 const pendingConstruction = (gameState.construction||[]).filter(c => BUILDINGS[c.key] && BUILDINGS[c.key].category === 'Livestock');
 
@@ -1589,6 +1589,8 @@
                             const needsAttention = f.animals && (f.feed < 30 || f.water < 30);
                             const buildingDef = BUILDINGS[f.key];
                             const feedType = buildingDef.input ? buildingDef.input.toUpperCase() : 'FEED';
+                            
+                            // SAFETY: Check if animal definition exists
                             const animalName = f.animals && ANIMALS[f.animals.type] ? ANIMALS[f.animals.type].name : 'Unknown';
 
                             return <div key={f.id} className={`glass-panel p-5 rounded-xl border-t-4 transition-all ${needsAttention ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-slate-600'}`}>
@@ -1768,11 +1770,11 @@
                 }
 
                 return (
-                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="bg-[#0f172a] border border-white/10 p-8 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+                        <div className="bg-[#0f172a] border border-white/10 p-8 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
                             <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
                                 <h3 className="text-2xl font-black text-white uppercase tracking-tight">{modal.type.replace('_',' ')}</h3>
-                                <button onClick={()=>setModal(null)} className="text-red-500 font-bold">X</button>
+                                <button onClick={()=>setModal(null)} className="text-red-500 font-bold p-2 hover:bg-white/10 rounded-full transition-colors"><Icons.X className="w-6 h-6" /></button>
                             </div>
                             
                             {modal.type === 'buy_fuel' && (
