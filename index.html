@@ -1017,24 +1017,23 @@
                     else if(step === 'Bale') { req.impCat = ['Baler']; }
                 } 
                 else if(type === 'chore') {
-                    req.role.push('Herd'); // Add Herdsman
+                    req.role.push('Herd'); 
                     req.trCat = ['Tractor']; 
                     if(step === 'feed') req.impCat = ['Mixer'];
                     else if(step === 'water') req.impCat = ['Tanker'];
                     else if(step === 'straw') req.impCat = ['Processor'];
                 } 
                 else if(type === 'maintenance') {
-                    req.role.push('Mech'); // Add Mechanic
+                    req.role.push('Mech'); 
                 }
                 else if(type === 'snow') {
-                    req.role.push('Hand'); // Add Hand for snow
+                    req.role.push('Hand'); 
                 }
                 else if(type === 'misc') {
-                    // step passed is modal.jobId
                     const job = MISC_JOBS.find(j => j.id === step);
-                    if(job) req.role.push(job.role); // Add specific role from job def
-                    if(job && job.req) req.trCat = [job.req]; // Fix equipment requirement too while we're at it?
-                    else req.trCat = []; // No equipment needed
+                    if(job) req.role.push(job.role); 
+                    if(job && job.req) req.trCat = [job.req]; 
+                    else req.trCat = []; 
                 }
                 
                 return req;
@@ -1326,7 +1325,7 @@
                 
                 const garageConstruction = (gameState.construction||[]).filter(c => {
                     const b = BUILDINGS[c.key];
-                    return b.category === 'Storage' || b.category === 'Infrastructure';
+                    return b && (b.category === 'Storage' || b.category === 'Infrastructure');
                 });
 
                 const availableBuildings = Object.entries(BUILDINGS).filter(([k,v]) => 
@@ -1447,6 +1446,277 @@
                                 </div>
                             )
                         })}
+                    </div>
+                </div>
+            };
+            
+            const renderBank = () => (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="glass-panel p-6 border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-900/10 to-transparent">
+                            <div className="text-emerald-400 text-xs font-bold uppercase mb-1">Liquid Capital</div>
+                            <div className="text-2xl font-mono text-white tracking-tight">${Math.floor(gameState.money).toLocaleString()}</div>
+                        </div>
+                        <div className="glass-panel p-6 border-l-4 border-red-500 bg-gradient-to-r from-red-900/10 to-transparent">
+                            <div className="text-red-400 text-xs font-bold uppercase mb-1">Outstanding Debt</div>
+                            <div className="text-2xl font-mono text-white tracking-tight">${Math.floor(gameState.loan).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div className="glass-panel p-6">
+                        <h3 className="text-white font-bold mb-4 flex items-center gap-2"><Icons.List className="w-4 h-4"/> Recent Transactions</h3>
+                        <div className="h-96 overflow-y-auto text-xs space-y-1 pr-2">
+                            {(gameState.transactions||[]).map(t=>(
+                                <div key={t.id} className="flex justify-between items-center py-2 px-3 hover:bg-white/5 rounded transition-colors border-b border-white/5">
+                                    <span className="text-slate-300">{t.desc}</span>
+                                    <span className={`font-mono font-bold ${t.amount>0?'text-emerald-400':'text-red-400'}`}>
+                                        {t.amount > 0 ? '+' : ''}${Math.floor(t.amount).toLocaleString()}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                        <button onClick={()=>loanOp(50000)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold shadow-lg shadow-emerald-900/20">Borrow $50k</button>
+                        <button onClick={()=>loanOp(1000000)} className="flex-1 bg-emerald-800 hover:bg-emerald-700 text-white py-3 rounded-lg font-bold shadow-lg shadow-emerald-900/20">Borrow $1M</button>
+                    </div>
+                    <div className="flex gap-3">
+                        <button onClick={()=>loanOp(-50000)} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold shadow-lg shadow-blue-900/20">Repay $50k</button>
+                        <button onClick={()=>loanOp(-1000000)} className="flex-1 bg-blue-800 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow-lg shadow-blue-900/20">Repay $1M</button>
+                    </div>
+                </div>
+            );
+            
+            const renderHR = () => (
+                <div className="glass-panel p-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-white">Workforce Management</h2>
+                        <div className="text-xs text-slate-400">Total Employees: {gameState.employees.length - 1}</div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-3 mb-8">
+                        {Object.keys(EMP_ROLES).map(r => (
+                            <button key={r} onClick={()=>hire(r)} className="bg-slate-800 hover:bg-blue-600 text-white text-xs py-3 rounded-lg font-bold transition-all border border-slate-700 hover:border-blue-400 group">
+                                <div className="text-slate-400 group-hover:text-blue-200 text-[10px] uppercase mb-1">Recruit</div>
+                                {EMP_ROLES[r].name}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    <div className="space-y-2">
+                        {(gameState.employees||[]).map(e => (
+                            <div key={e.id} className="flex justify-between items-center p-4 bg-slate-800/50 rounded-xl border border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-2 h-2 rounded-full ${e.status === 'Idle' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`}></div>
+                                    <div>
+                                        <div className="text-white font-bold text-sm">{e.name}</div>
+                                        <div className="text-xs text-slate-500">{e.role} • ${e.hourlyRate}/hr</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className={`text-xs font-bold px-2 py-1 rounded ${e.status==='Idle'?'bg-emerald-900/30 text-emerald-400':'bg-amber-900/30 text-amber-400'}`}>{e.status}</div>
+                                    {e.id!==1 && <button onClick={()=>fireEmployee(e.id)} className="text-red-500 text-xs hover:text-red-300 font-bold">TERMINATE</button>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+            
+            const renderLive = () => {
+                // SAFETY CHECK: Filter out buildings that don't exist in our BUILDINGS list to prevent crash
+                const activeFacilities = (gameState.facilities||[]).filter(f => BUILDINGS[f.key] && BUILDINGS[f.key].category === 'Livestock');
+                const pendingConstruction = (gameState.construction||[]).filter(c => BUILDINGS[c.key] && BUILDINGS[c.key].category === 'Livestock');
+
+                return <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-2"><Icons.Barn className="text-orange-400"/> Livestock Operations</h2>
+                        <button onClick={()=>setModal({type:'build', tab:'live'})} className="btn-modern bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg hover:bg-blue-500">+ New Pen</button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {pendingConstruction.map(c => {
+                            const timeLeft = c.endTime - now;
+                            const totalTime = BUILDINGS[c.key].buildTime;
+                            const pct = Math.max(0, Math.min(100, 100 - (timeLeft/totalTime)*100));
+                            return (
+                                <div key={c.id} className="glass-panel p-6 rounded-xl border border-dashed border-yellow-500/50 bg-yellow-900/10">
+                                    <div className="flex justify-between mb-4">
+                                        <div className="font-bold text-yellow-500">🚧 Construction Site</div>
+                                    </div>
+                                    <div className="text-white font-bold text-lg mb-2">{BUILDINGS[c.key].name}</div>
+                                    
+                                    <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden mb-2">
+                                        <div className="h-full bg-yellow-500 progress-bar-striped" style={{width:`${pct}%`}}></div>
+                                    </div>
+                                    <div className="text-right text-xs font-mono text-yellow-200">{formatTime(timeLeft)} remaining</div>
+                                </div>
+                            )
+                        })}
+
+                        {activeFacilities.map(f => {
+                            const job = (gameState.activeJobs||[]).find(j=>j.tid == f.id);
+                            const pct = job ? Math.min(100, ((now - job.start)/job.dur)*100) : 0;
+                            let timeStr = ""; if(job) { const el = now - job.start; const rem = Math.max(0, job.dur - el); timeStr = formatTime(rem); }
+                            
+                            const needsAttention = f.animals && (f.feed < 30 || f.water < 30);
+                            const buildingDef = BUILDINGS[f.key];
+                            const feedType = buildingDef.input ? buildingDef.input.toUpperCase() : 'FEED';
+                            
+                            // SAFETY: Check if animal definition exists
+                            const animalName = f.animals && ANIMALS[f.animals.type] ? ANIMALS[f.animals.type].name : 'Unknown';
+
+                            return <div key={f.id} className={`glass-panel p-5 rounded-xl border-t-4 transition-all ${needsAttention ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-slate-600'}`}>
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="font-bold text-white text-lg">{buildingDef.name}</div>
+                                    {needsAttention && <div className="text-[10px] bg-red-600 px-2 py-1 rounded text-white font-bold animate-pulse">ATTENTION</div>}
+                                </div>
+                                <div className="text-xs text-slate-400 mb-4 bg-slate-900/50 p-2 rounded inline-block">
+                                    {f.animals ? `${f.animals.count} ${animalName}` : 'Empty Pen'}
+                                </div>
+                                
+                                {f.animals && <div className="space-y-2 mb-4">
+                                    <div>
+                                        <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>{feedType} Level</span><span>{Math.floor(f.feed)}%</span></div>
+                                        <div className="w-full bg-slate-800 h-1.5 rounded-full"><div className={`h-full rounded-full transition-all duration-500 ${f.feed<30?'bg-red-500':'bg-emerald-500'}`} style={{width:`${f.feed}%`}}></div></div>
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>Water Level</span><span>{Math.floor(f.water)}%</span></div>
+                                        <div className="w-full bg-slate-800 h-1.5 rounded-full"><div className={`h-full rounded-full transition-all duration-500 ${f.water<30?'bg-red-500':'bg-blue-500'}`} style={{width:`${f.water}%`}}></div></div>
+                                    </div>
+                                </div>}
+
+                                {f.animals && !job && <div className="flex gap-2">
+                                    <button onClick={()=>setModal({type:'chore', job:'feed', fid:f.id})} className="flex-1 bg-emerald-700/80 hover:bg-emerald-600 text-[10px] text-white py-2 rounded font-bold transition-colors">FEED</button>
+                                    <button onClick={()=>setModal({type:'chore', job:'water', fid:f.id})} className="flex-1 bg-blue-700/80 hover:bg-blue-600 text-[10px] text-white py-2 rounded font-bold transition-colors">WATER</button>
+                                    <button onClick={()=>setModal({type:'chore', job:'straw', fid:f.id})} className="flex-1 bg-amber-700/80 hover:bg-amber-600 text-[10px] text-white py-2 rounded font-bold transition-colors">BEDDING</button>
+                                </div>}
+                                
+                                {job && <div className="mt-2 bg-slate-900/50 p-2 rounded">
+                                    <div className="flex justify-between text-[10px] text-amber-400 font-bold mb-1"><span className="uppercase">{job.task} IN PROGRESS</span><span className="font-mono">{timeStr}</span></div>
+                                    <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-amber-500 progress-bar-striped" style={{width:`${pct}%`}}></div></div>
+                                </div>}
+                            </div>
+                        })}
+                    </div>
+                </div>
+            };
+            
+            const renderReal = () => (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-2"><Icons.Map className="text-emerald-400"/> Land Management</h2>
+                        <div className="text-xs text-slate-400 bg-slate-900/50 px-3 py-1 rounded-lg border border-white/5">
+                            Total Acres: {(gameState.fields||[]).filter(f=>f.owned).reduce((a,b)=>a+b.acres,0).toLocaleString()}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {(gameState.fields||[]).map(f => (
+                            <div key={f.id} className={`glass-panel p-6 relative overflow-hidden transition-all ${f.owned ? 'border-emerald-500/30 bg-emerald-900/10' : 'border-white/5 bg-slate-900/40 opacity-75 hover:opacity-100 hover:border-white/20'} ${f.leased ? 'border-blue-500/40' : ''}`}>
+                                <div className="flex justify-between items-center mb-4 relative z-10">
+                                    <span className="font-black text-white text-2xl tracking-tighter">#{f.id}</span>
+                                    {f.owned ? (
+                                        <span className="text-[10px] text-emerald-300 bg-emerald-500/20 px-2 py-1 rounded-md font-bold border border-emerald-500/30">{f.leased ? 'LEASED' : 'OWNED'}</span>
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-1 rounded-md font-bold">FOR SALE</span>
+                                    )}
+                                </div>
+                                <div className="space-y-1 mb-6 relative z-10">
+                                    <div className="text-sm text-slate-300 font-mono">{f.acres} Acres</div>
+                                    <div className="text-xs text-slate-500">Soil Quality: A+</div>
+                                </div>
+                                
+                                {!f.owned && (
+                                    <div className="flex flex-col gap-2 relative z-10 group">
+                                        <button onClick={()=>buyField(f.id)} className="w-full py-2 bg-slate-800 hover:bg-emerald-600 text-white text-[10px] font-bold rounded-lg transition-all shadow-lg">
+                                            Buy ${(f.acres*LAND_PRICE_PER_ACRE).toLocaleString()}
+                                        </button>
+                                        <button onClick={()=>leaseField(f.id)} className="w-full py-2 bg-slate-800 hover:bg-blue-600 text-white text-[10px] font-bold rounded-lg transition-all shadow-lg">
+                                            Lease ${(f.acres*LAND_PRICE_PER_ACRE*LAND_LEASE_RATE).toLocaleString()}
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                <div className={`absolute -bottom-6 -right-6 w-24 h-24 rounded-full blur-2xl opacity-20 ${f.owned ? (f.leased ? 'bg-blue-500' : 'bg-emerald-500') : 'bg-slate-500'}`}></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+            
+            const renderStorage = () => {
+                const stats = getStorageStats();
+                const grainPct = Math.min(100, (stats.cropUsed / stats.grainCap) * 100);
+                const machinePct = Math.min(100, (stats.machineUsed / stats.machineCap) * 100);
+                const freeGrain = stats.grainCap - stats.cropUsed;
+                const freeMachine = stats.machineCap - stats.machineUsed;
+
+                return <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><Icons.Box className="text-orange-400"/> Inventory Management</h2>
+                    
+                    <div className="glass-panel p-6 border-l-4 border-blue-500 mb-6 bg-gradient-to-r from-blue-900/10 to-transparent">
+                        <h3 className="text-lg font-bold text-white mb-4">Capacity Overview</h3>
+                        <div className="grid grid-cols-2 gap-8">
+                            <div>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-slate-300">Grain Silos</span>
+                                    <span className={freeGrain < 1000 ? "text-red-400 font-bold" : "text-emerald-400 font-mono"}>
+                                        {freeGrain.toLocaleString()} bu Free
+                                    </span>
+                                </div>
+                                <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden border border-white/10">
+                                    <div className={`h-full ${grainPct > 90 ? 'bg-red-500' : 'bg-blue-500'} progress-bar-striped`} style={{width:`${grainPct}%`}}></div>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-1 text-right">{stats.cropUsed.toLocaleString()} / {stats.grainCap.toLocaleString()} bu</div>
+                            </div>
+                            
+                            <div>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-slate-300">Machine Sheds</span>
+                                    <span className={freeMachine < 2 ? "text-red-400 font-bold" : "text-emerald-400 font-mono"}>
+                                        {freeMachine} Slots Free
+                                    </span>
+                                </div>
+                                <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden border border-white/10">
+                                    <div className={`h-full ${machinePct > 90 ? 'bg-red-500' : 'bg-orange-500'} progress-bar-striped`} style={{width:`${machinePct}%`}}></div>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-1 text-right">{stats.machineUsed} / {stats.machineCap} Vehicles</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="glass-panel p-6">
+                            <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Silo Storage (Harvest)</h3>
+                            <div className="space-y-3">
+                                {Object.entries(gameState.consumables).filter(([k])=>['corn','soy','wheat','canola','sunflower','oats','barley','sorghum','rice'].includes(k)).map(([k,v]) => (
+                                    <div key={k} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-white/5">
+                                        <div className="capitalize text-slate-300 font-medium">{k}</div>
+                                        <div className="font-mono text-emerald-400 font-bold">{Math.floor(v).toLocaleString()} bu</div>
+                                    </div>
+                                ))}
+                                {Object.keys(gameState.consumables).filter(k=>['corn','soy','wheat'].includes(k)).length === 0 && <div className="text-xs text-slate-500 italic">Silos are empty.</div>}
+                            </div>
+                        </div>
+
+                        <div className="glass-panel p-6">
+                            <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Barn Supplies</h3>
+                            <div className="space-y-3">
+                                {Object.entries(gameState.consumables).filter(([k])=>['tmr','hay','straw','fert','lime','seed_corn'].includes(k) || k.startsWith('seed_')).map(([k,v]) => {
+                                    const isLow = v < 100;
+                                    return (
+                                        <div key={k} className={`flex justify-between items-center p-3 rounded-lg border transition-all ${isLow ? 'bg-red-900/20 border-red-500/30' : 'bg-slate-800/50 border-white/5'}`}>
+                                            <div className="capitalize text-slate-300 font-medium flex items-center gap-2">
+                                                {k.replace('seed_','').toUpperCase()}
+                                                {isLow && <span className="text-[8px] bg-red-500 text-white px-1 rounded">LOW</span>}
+                                            </div>
+                                            <div className={`font-mono font-bold ${isLow ? 'text-red-400' : 'text-blue-400'}`}>{Math.floor(v).toLocaleString()}</div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </div>
             };
