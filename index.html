@@ -936,9 +936,16 @@
                         fields: prev.fields.map(f => f.id <= 10 ? {...f, owned:true, leased:false} : {...f, owned:false}),
                         // Reset debt
                         loan: 0,
+                        // Add Buildings (Shed, Fuel, Coop, Beef Barn)
+                        facilities: [
+                            {id:'start_shed', key:'shed_s', type:'Shed', category:'Storage', animals:null},
+                            {id:'start_fuel', key:'fuel_s', type:'Infrastructure', category:'Infrastructure', animals:null},
+                            {id:'start_coop', key:'coop', type:'Livestock_Poultry', category:'Livestock', animals:null, feed:0, water:0, straw:0, manure:0, output:0},
+                            {id:'start_beef', key:'feedlot', type:'Livestock_Beef', category:'Livestock', animals:null, feed:0, water:0, straw:0, manure:0, output:0}
+                        ],
                         transactions: [{id:Date.now(), desc: 'Starter Pack Activated', amount: 0, date:Date.now()}]
                     }));
-                    alert("Starter Pack Activated! Check your Garage and Fields.");
+                    alert("Starter Pack Activated! Check your Garage, Barns, and Fields.");
                 }
             };
 
@@ -1338,7 +1345,7 @@
                             <div className="space-y-4">
                                 <div className="glass-panel p-6 border-l-4 border-purple-500">
                                     <h3 className="text-xl font-black text-white">STARTER PACK</h3>
-                                    <p className="text-slate-400 text-sm mb-4">Includes 1 of every machine, 10 Owned Fields, and resets cash to $5,000.</p>
+                                    <p className="text-slate-400 text-sm mb-4">Includes 1 of every machine, 10 Owned Fields, Chicken Coop, Beef Barn, and resets cash to $5,000.</p>
                                     <button onClick={()=>buyBundle('ultimate')} className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-900/20">REDEEM BUNDLE</button>
                                 </div>
                             </div>
