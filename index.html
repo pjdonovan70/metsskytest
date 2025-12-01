@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Jersey Roots">
     
-    <!-- APP ICONS (Using generic tractor icons for the home screen) -->
+    <!-- APP ICONS -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/180/tractor.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/192/tractor.png">
 
@@ -20,10 +20,6 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- FIREBASE SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700;900&display=swap');
@@ -42,7 +38,6 @@
                 url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
             color: #e2e8f0;
             overflow: hidden; 
-            /* Safe area for iPhone notch */
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
@@ -58,7 +53,6 @@
             transition: transform 0.2s, border-color 0.2s;
         }
         
-        /* Hide scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -104,8 +98,7 @@
             List: ({className}) => <IconWrapper className={className}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></IconWrapper>,
             Home: ({className}) => <IconWrapper className={className}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconWrapper>,
             Map: ({className}) => <IconWrapper className={className}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></IconWrapper>,
-            Dollar: ({className}) => <IconWrapper className={className}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></IconWrapper>,
-            Cloud: ({className}) => <IconWrapper className={className}><path d="M17.5 19c0-3.037-2.463-5.5-5.5-5.5S6.5 15.963 6.5 19"/><path d="M19 19H5V8.5L12 3l7 5.5V19Z"/><circle cx="12" cy="14" r="3" fill="currentColor" fillOpacity="0.3"/></IconWrapper>
+            Dollar: ({className}) => <IconWrapper className={className}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></IconWrapper>
         };
 
         const DAY_MS = 86400000;
@@ -230,20 +223,6 @@
             const [fuelAmount, setFuelAmount] = useState(100);
             const [sellAmount, setSellAmount] = useState(0);
 
-            // HARD CODED CONFIGURATION
-            const [fbConfig, setFbConfig] = useState({
-                apiKey: "AIzaSyAzjHQJQGLYVhBk2yQnuYVSWV4amcd1DnU",
-                authDomain: "myfarmgam.firebaseapp.com",
-                databaseURL: "https://myfarmgam-default-rtdb.firebaseio.com",
-                projectId: "myfarmgam",
-                storageBucket: "myfarmgam.firebasestorage.app",
-                messagingSenderId: "420326925044",
-                appId: "1:420326925044:web:0509a310e6e7c8eb2d74a1"
-            });
-
-            const [cloudId, setCloudId] = useState("");
-            const [cloudStatus, setCloudStatus] = useState("Disconnected");
-
             const [gameState, setGameState] = useState(() => {
                 try {
                     const saved = localStorage.getItem(SAVE_KEY); 
@@ -298,52 +277,6 @@
             const [view, setView] = useState('dashboard');
             const [modal, setModal] = useState(null);
             const [storeTab, setStoreTab] = useState('eq');
-            const [cloudTab, setCloudTab] = useState('setup');
-
-            // --- FIREBASE INIT ---
-            useEffect(() => {
-                if(fbConfig && fbConfig.apiKey && window.firebase && !firebase.apps.length) {
-                    try {
-                        firebase.initializeApp(fbConfig);
-                        setCloudStatus("Firebase Initialized");
-                    } catch(e) {
-                        setCloudStatus("Error Initializing Firebase: " + e.message);
-                    }
-                }
-            }, [fbConfig]);
-
-            // CLOUD FUNCTIONS
-            const saveToCloud = () => {
-                if(!cloudId) return alert("Please enter a Save ID (e.g. MyFarm123)");
-                if(!firebase.apps.length) return alert("Firebase not configured!");
-                
-                const db = firebase.database();
-                db.ref('farms/' + cloudId).set(gameState, (error) => {
-                    if (error) {
-                        alert("Cloud Save Failed: " + error.message);
-                    } else {
-                        alert("Saved to Cloud successfully!");
-                        setCloudStatus(`Linked to: ${cloudId}`);
-                    }
-                });
-            };
-
-            const loadFromCloud = () => {
-                if(!cloudId) return alert("Please enter a Save ID");
-                if(!firebase.apps.length) return alert("Firebase not configured!");
-
-                const db = firebase.database();
-                db.ref('farms/' + cloudId).once('value').then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        setGameState(data);
-                        alert("Game loaded from Cloud!");
-                        setCloudStatus(`Linked to: ${cloudId}`);
-                    } else {
-                        alert("No save found for this ID.");
-                    }
-                });
-            };
 
             // HELPER
             const getEq = (id) => {
@@ -1009,49 +942,6 @@
                 </div>
             );
 
-            const renderCloud = () => (
-                <div className="space-y-6">
-                    <h2 className="text-xl lg:text-2xl font-bold text-white flex items-center gap-2"><Icons.Cloud className="text-blue-400"/> Save & Sync</h2>
-                    <div className="flex gap-2 p-1 bg-slate-900/50 rounded-xl w-full lg:w-fit border border-white/10">
-                        <button onClick={()=>setCloudTab('setup')} className={`flex-1 px-4 lg:px-6 py-2 rounded-lg text-xs lg:text-sm font-bold transition-all ${cloudTab==='setup' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>Auto Sync</button>
-                        <button onClick={()=>setCloudTab('manual')} className={`flex-1 px-4 lg:px-6 py-2 rounded-lg text-xs lg:text-sm font-bold transition-all ${cloudTab==='manual' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>Manual</button>
-                    </div>
-
-                    {cloudTab === 'manual' && (
-                        <div className="glass-panel p-6 border-l-4 border-slate-500">
-                            <h3 className="text-lg font-bold text-white mb-2">Manual Transfer</h3>
-                            <textarea readOnly className="w-full bg-slate-900 border border-slate-700 text-slate-300 p-4 rounded-lg text-xs font-mono h-32 mb-4" value={localStorage.getItem(SAVE_KEY) || ''}></textarea>
-                            <div className="flex flex-col lg:flex-row gap-4">
-                                <button onClick={() => {navigator.clipboard.writeText(localStorage.getItem(SAVE_KEY)); alert("Save Data Copied to Clipboard!");}} className="bg-emerald-600 text-white px-4 py-3 rounded-lg font-bold text-sm">Copy Save Data</button>
-                                <button onClick={importSave} className="bg-blue-600 text-white px-4 py-3 rounded-lg font-bold text-sm">Import Save Data</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {cloudTab === 'setup' && (
-                        <div className="space-y-6">
-                            <div className="glass-panel p-4 lg:p-6 border-l-4 border-orange-500 bg-orange-900/10">
-                                <h3 className="text-lg font-bold text-white mb-2">Connection Status</h3>
-                                <div className="text-emerald-400 font-mono font-bold text-md mb-1">Status: {cloudStatus}</div>
-                                <p className="text-xs text-slate-400">Hard-coded configuration loaded.</p>
-                            </div>
-
-                            <div className="glass-panel p-4 lg:p-6 border-l-4 border-blue-500">
-                                <h3 className="text-lg font-bold text-white mb-2">Sync Controls</h3>
-                                <div className="mb-4">
-                                    <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Save Slot ID</label>
-                                    <input type="text" value={cloudId} onChange={(e)=>setCloudId(e.target.value)} placeholder="e.g. MyFarm1" className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded text-sm font-mono"/>
-                                </div>
-                                <div className="flex gap-3">
-                                    <button onClick={saveToCloud} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold shadow-lg">Save</button>
-                                    <button onClick={loadFromCloud} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold shadow-lg">Load</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-
             const renderMarket = () => {
                 const currentMonth = new Date(now).getMonth();
                 return <div className="space-y-6">
@@ -1415,7 +1305,7 @@
                             </div>
                             
                             <nav className="space-y-2">
-                                {['Dashboard', 'Market', 'Jobs', 'Livestock', 'Store', 'Garage', 'Bank', 'HR', 'Real Estate', 'Storage', 'Cloud'].map(v => {
+                                {['Dashboard', 'Market', 'Jobs', 'Livestock', 'Store', 'Garage', 'Bank', 'HR', 'Real Estate', 'Storage'].map(v => {
                                     const isActive = view === v.toLowerCase().replace(' ','');
                                     const key = v.toLowerCase().replace(' ','');
                                     return (
@@ -1431,7 +1321,6 @@
                                             {v === 'Real Estate' && <Icons.Map className="w-5 h-5"/>}
                                             {v === 'Storage' && <Icons.Box className="w-5 h-5"/>}
                                             {v === 'Market' && <Icons.Dollar className="w-5 h-5"/>}
-                                            {v === 'Cloud' && <Icons.Cloud className="w-5 h-5"/>}
                                             <span className="font-bold text-sm">{v}</span>
                                         </button>
                                     )
@@ -1456,13 +1345,12 @@
                             {view === 'hr' && renderHR()}
                             {view === 'realestate' && renderReal()}
                             {view === 'storage' && renderStorage()}
-                            {view === 'cloud' && renderCloud()}
                         </div>
                     </div>
 
                     <div className="lg:hidden fixed bottom-0 left-0 w-full bg-slate-950/95 backdrop-blur-xl border-t border-white/10 z-50 overflow-x-auto no-scrollbar pb-safe">
                         <div className="flex p-2 gap-2 min-w-max">
-                             {['Dashboard', 'Market', 'Jobs', 'Livestock', 'Store', 'Garage', 'Bank', 'HR', 'Real Estate', 'Storage', 'Cloud'].map(v => {
+                             {['Dashboard', 'Market', 'Jobs', 'Livestock', 'Store', 'Garage', 'Bank', 'HR', 'Real Estate', 'Storage'].map(v => {
                                 const isActive = view === v.toLowerCase().replace(' ','');
                                 const key = v.toLowerCase().replace(' ','');
                                 return (
@@ -1478,7 +1366,6 @@
                                         {v === 'Real Estate' && <Icons.Map className="w-6 h-6 mb-1"/>}
                                         {v === 'Storage' && <Icons.Box className="w-6 h-6 mb-1"/>}
                                         {v === 'Market' && <Icons.Dollar className="w-6 h-6 mb-1"/>}
-                                        {v === 'Cloud' && <Icons.Cloud className="w-6 h-6 mb-1"/>}
                                         <span className="text-[10px] font-bold whitespace-nowrap">{v}</span>
                                     </button>
                                 )
