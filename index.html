@@ -3,48 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jersey Roots | v22.6 (Stable Snow Edition)</title>
+    <title>Jersey Roots | v26.13 (Slower Consumption)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700;900&display=swap');
+        
+        :root {
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-shine: rgba(255, 255, 255, 0.03);
+        }
+
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #0f172a; 
-            background-image: linear-gradient(rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98)), url("https://www.transparenttextures.com/patterns/diagmonds-light.png");
-            color: #cbd5e1;
+            background-color: #020617; 
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(22, 78, 99, 0.3) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(76, 29, 149, 0.3) 0px, transparent 50%),
+                url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+            color: #e2e8f0;
+            overflow-y: scroll;
         }
+
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .glass-panel { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
-        .btn-primary { background: linear-gradient(to bottom, #16a34a, #15803d); border: 1px solid #166534; transition: all 0.2s; }
-        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        .btn-blue { background: linear-gradient(to bottom, #2563eb, #1d4ed8); border: 1px solid #1e40af; transition: all 0.2s; }
-        .btn-blue:hover { filter: brightness(1.1); transform: translateY(-1px); }
-        .progress-bar { transition: width 1s linear; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
         
-        .fuel-flow {
-            background: linear-gradient(45deg, #ea580c 25%, #c2410c 25%, #c2410c 50%, #ea580c 50%, #ea580c 75%, #c2410c 75%, #c2410c);
-            background-size: 20px 20px;
-            animation: flow 1s linear infinite;
+        .glass-panel { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(16px); 
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
+            transition: transform 0.2s, border-color 0.2s;
         }
-        .snow-bg { background-color: #e2e8f0; background-image: url("https://www.transparenttextures.com/patterns/snow.png"); color: #1e293b; }
-        .snow-bg .glass-panel { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(0,0,0,0.1); color: #0f172a; }
-        .snow-bg .text-slate-400 { color: #64748b; }
-        .snow-bg .text-white { color: #0f172a; }
+        .glass-panel:hover { border-color: rgba(255,255,255,0.15); }
+
+        .btn-modern {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .btn-modern:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .progress-bar-striped {
+            background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent);
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+        @keyframes progress-bar-stripes {
+            0% { background-position: 1rem 0; }
+            100% { background-position: 0 0; }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .snow-bg { background-color: #f1f5f9; background-image: url("https://www.transparenttextures.com/patterns/snow.png"); color: #0f172a; }
+        .snow-bg .glass-panel { background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.1); color: #0f172a; }
+        .snow-bg .text-white { color: #0f172a !important; }
+        .snow-bg .text-slate-400 { color: #64748b !important; }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
-        // --- ICONS ---
         const IconWrapper = ({ children, className }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
         );
@@ -55,17 +88,22 @@
             Silo: ({className}) => <IconWrapper className={className}><path d="M2 22v-5l5-5 5 5-5 5z"/><path d="M12 2v20"/><path d="M7 12h10"/></IconWrapper>,
             Users: ({className}) => <IconWrapper className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconWrapper>,
             Fuel: ({className}) => <IconWrapper className={className}><path d="M6 22q2-2 2-8c0-3.6-1.5-5-2-5s-2 1.4-2 5q0 6 2 8"/><path d="M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 2v2"/><path d="M12 22v-2"/></IconWrapper>,
-            Truck: ({className}) => <IconWrapper className={className}><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></IconWrapper>,
+            Truck: ({className}) => <IconWrapper className={className}><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></IconWrapper>,
             Hammer: ({className}) => <IconWrapper className={className}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V2.75A2.75 2.75 0 0 0 16 0h-2.54a1 1 0 0 0-.76.35L1.08 13.08c-.6.6-.93 1.4-.93-2.25V2.75"/></IconWrapper>,
             Clock: ({className}) => <IconWrapper className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconWrapper>,
             Box: ({className}) => <IconWrapper className={className}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-9"/></IconWrapper>,
             Bank: ({className}) => <IconWrapper className={className}><rect x="3" y="18" width="18" height="4" rx="1"/><rect x="3" y="3" width="18" height="4" rx="1"/><path d="M4 7v11"/><path d="M20 7v11"/><path d="M12 7v11"/><path d="M8 7v11"/><path d="M16 7v11"/></IconWrapper>,
             Wrench: ({className}) => <IconWrapper className={className}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></IconWrapper>,
-            Snow: ({className}) => <IconWrapper className={className}><path d="M2.5 2.5a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Zm19 0a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Zm-9.5 2a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Zm9.5 17a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Zm-19 0a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Z"/><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07 19.07 4.93"/></IconWrapper>
+            Snow: ({className}) => <IconWrapper className={className}><path d="M2.5 2.5a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Zm19 0a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Zm-9.5 2a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Zm9.5 17a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Zm-19 0a.5.5 0 0 1 0 1 .5.5 0 0 1 0-1Z"/><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07 19.07 4.93"/></IconWrapper>,
+            List: ({className}) => <IconWrapper className={className}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></IconWrapper>,
+            Home: ({className}) => <IconWrapper className={className}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconWrapper>,
+            Map: ({className}) => <IconWrapper className={className}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></IconWrapper>,
+            Dollar: ({className}) => <IconWrapper className={className}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></IconWrapper>
         };
 
         const DAY_MS = 86400000;
         const HOUR_MS = 3600000;
+        const SAVE_KEY = 'jersey_roots_v26_12_STABLE'; 
 
         const SERVICE_INTERVAL = 24; 
         const SERVICE_COST = 1200; 
@@ -74,27 +112,146 @@
         const OVERDUE_RATE = 6.0;
         const FUEL_PRICE = 3.65;
         const LAND_PRICE_PER_ACRE = 16500;
-        const SNOW_JOB_TIME = 2 * HOUR_MS; // 2 Hours
+        const SNOW_JOB_TIME = 2 * HOUR_MS; 
+        const FEED_PER_CHORE = 500; 
+
+        const EQUIP_LEASE_RATE = 0.05; 
+        const LAND_LEASE_RATE = 0.01;
+        const BASE_FARM_TAX = 2000;
+        const TAX_PER_ACRE = 25;
 
         const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-        // DATA
-        const CROPS = { 'Corn': { name: 'Corn', plantMonths: [4, 5], steps: ['Primary Tillage', 'Lime', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_corn',seedRate:0.4,fert:0.2,lime:1}, equip:['Planter','Header_Corn'], yield:180, price:4.25 }, 'Soy': { name: 'Soy', plantMonths: [4, 6], steps: ['Primary Tillage', 'Lime', 'Secondary Tillage', 'Plant', 'Spray', 'Harvest'], inputs: {seed:'seed_soy',seedRate:1.0,fert:0,lime:0.5}, equip:['Planter','Header_Grain'], yield:55, price:11.40 }, 'Wheat': { name: 'Wheat', plantMonths: [8, 11], steps: ['Primary Tillage', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_wheat',seedRate:2.0,fert:0.15,lime:0}, equip:['Drill','Header_Grain'], yield:85, price:5.60, byproduct:'straw', byYield:1.5 }, 'Hay': { name: 'Alfalfa', plantMonths: [3, 8], steps: ['Primary Tillage', 'Lime', 'Secondary Tillage', 'Plant', 'Cut', 'Tedder', 'Bale'], inputs: {seed:'seed_hay',seedRate:0.5,fert:0.1,lime:1.5}, equip:['Drill','Mower','Baler'], yield:6, price:180 }, 'Cotton': { name: 'Cotton', plantMonths: [4, 5], steps: ['Primary Tillage', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Spray', 'Harvest'], inputs: { seed: 'seed_cotton', seedRate: 0.2, fert: 0.25, lime:1 }, equip: ['Planter', 'Harvester_Cotton'], yield: 3, price: 85.00 }, 'Rice': { name: 'Rice', plantMonths: [3, 5], steps: ['Primary Tillage', 'Fertilizer', 'Plant', 'Spray', 'Harvest'], inputs: { seed: 'seed_rice', seedRate: 1.5, fert: 0.4, lime:0 }, equip: ['Drill', 'Header_Grain'], yield: 160, price: 6.80 }, 'Potato': { name: 'Potatoes', plantMonths: [3, 4], steps: ['Primary Tillage', 'De-Stone', 'Plant', 'Hilling', 'Spray', 'Harvest'], inputs: {seed:'seed_potato',seedRate:20,fert:0.5,lime:0}, equip:['Planter_Potato','Harvester_Potato'], yield:450, price:9.50 }, 'Peanuts': { name: 'Peanuts', plantMonths: [4, 5], steps: ['Tillage', 'Lime', 'Plant', 'Digging', 'Harvest'], inputs: {seed:'seed_peanut',seedRate:1,fert:0.2,lime:0.8}, equip:['Planter','Harvester_Peanut'], yield:4000, price:0.25 }, 'Beets': { name: 'Sugar Beets', plantMonths: [3, 4], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_beet',seedRate:0.5,fert:0.4,lime:1}, equip:['Planter','Harvester_Beet'], yield:30, price:45.00 }, 'Canola': { name: 'Canola', plantMonths: [7, 8], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_canola',seedRate:0.3,fert:0.3,lime:0.5}, equip:['Drill','Header_Grain'], yield:45, price:13.50 }, 'Oats': { name: 'Oats', plantMonths: [2, 3], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_oats',seedRate:3,fert:0.1,lime:0}, equip:['Drill','Header_Grain'], yield:90, price:3.80 }, 'Barley': { name: 'Barley', plantMonths: [8, 10], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_barley',seedRate:2.5,fert:0.15,lime:0}, equip:['Drill','Header_Grain'], yield:80, price:5.10 }, 'Sorghum': { name: 'Sorghum', plantMonths: [4, 6], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_sorghum',seedRate:0.4,fert:0.2,lime:0}, equip:['Planter','Header_Grain'], yield:110, price:6.20 }, 'Sunflower': { name: 'Sunflower', plantMonths: [4, 6], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_sunflower',seedRate:0.3,fert:0.2,lime:0}, equip:['Planter','Header_Sunflower'], yield:1800, price:0.22 } };
+        const CROPS = { 
+            'Corn': { name: 'Corn', color: 'bg-yellow-500', plantMonths: [3, 4, 5], harvestMonths: [8, 9, 10], steps: ['Primary Tillage', 'Lime', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_corn',seedRate:0.4,fert:0.2,lime:1}, equip:['Planter','Header_Corn'], yield:180, price:4.25 }, 
+            'Soy': { name: 'Soy', color: 'bg-green-600', plantMonths: [4, 5, 6], harvestMonths: [9, 10], steps: ['Primary Tillage', 'Lime', 'Secondary Tillage', 'Plant', 'Spray', 'Harvest'], inputs: {seed:'seed_soy',seedRate:1.0,fert:0,lime:0.5}, equip:['Planter','Header_Grain'], yield:55, price:11.40 }, 
+            'Wheat': { name: 'Wheat', color: 'bg-amber-600', plantMonths: [8, 9, 10, 11], harvestMonths: [5, 6], steps: ['Primary Tillage', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_wheat',seedRate:2.0,fert:0.15,lime:0}, equip:['Drill','Header_Grain'], yield:85, price:5.60, byproduct:'straw', byYield:1.5 }, 
+            'Hay': { name: 'Alfalfa', color: 'bg-emerald-700', plantMonths: [3, 4, 8], harvestMonths: [4, 5, 6, 7, 8], steps: ['Primary Tillage', 'Lime', 'Secondary Tillage', 'Plant', 'Cut', 'Tedder', 'Bale'], inputs: {seed:'seed_hay',seedRate:0.5,fert:0.1,lime:1.5}, equip:['Drill','Mower','Baler'], yield:6, price:180 }, 
+            'Cotton': { name: 'Cotton', color: 'bg-slate-200', plantMonths: [4, 5], harvestMonths: [9, 10], steps: ['Primary Tillage', 'Fertilizer', 'Secondary Tillage', 'Plant', 'Spray', 'Harvest'], inputs: { seed: 'seed_cotton', seedRate: 0.2, fert: 0.25, lime:1 }, equip: ['Planter', 'Harvester_Cotton'], yield: 3, price: 85.00 }, 
+            'Rice': { name: 'Rice', color: 'bg-cyan-700', plantMonths: [3, 5], harvestMonths: [8, 9], steps: ['Primary Tillage', 'Fertilizer', 'Plant', 'Spray', 'Harvest'], inputs: { seed: 'seed_rice', seedRate: 1.5, fert: 0.4, lime:0 }, equip: ['Drill', 'Header_Grain'], yield: 160, price: 6.80 }, 
+            'Potato': { name: 'Potatoes', color: 'bg-yellow-800', plantMonths: [3, 4], harvestMonths: [7, 8, 9], steps: ['Primary Tillage', 'De-Stone', 'Plant', 'Hilling', 'Spray', 'Harvest'], inputs: {seed:'seed_potato',seedRate:20,fert:0.5,lime:0}, equip:['Planter_Potato','Harvester_Potato'], yield:450, price:9.50 }, 
+            'Peanuts': { name: 'Peanuts', color: 'bg-orange-800', plantMonths: [4, 5], harvestMonths: [8, 9], steps: ['Tillage', 'Lime', 'Plant', 'Digging', 'Harvest'], inputs: {seed:'seed_peanut',seedRate:1,fert:0.2,lime:0.8}, equip:['Planter','Harvester_Peanut'], yield:4000, price:0.25 }, 
+            'Beets': { name: 'Sugar Beets', color: 'bg-pink-900', plantMonths: [3, 4], harvestMonths: [8, 9, 10], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_beet',seedRate:0.5,fert:0.4,lime:1}, equip:['Planter','Harvester_Beet'], yield:30, price:45.00 }, 
+            'Canola': { name: 'Canola', color: 'bg-yellow-400', plantMonths: [7, 8], harvestMonths: [5, 6], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_canola',seedRate:0.3,fert:0.3,lime:0.5}, equip:['Drill','Header_Grain'], yield:45, price:13.50 }, 
+            'Oats': { name: 'Oats', color: 'bg-amber-200', plantMonths: [2, 3], harvestMonths: [6, 7], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_oats',seedRate:3,fert:0.1,lime:0}, equip:['Drill','Header_Grain'], yield:90, price:3.80 }, 
+            'Barley': { name: 'Barley', color: 'bg-amber-300', plantMonths: [8, 10], harvestMonths: [5, 6], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_barley',seedRate:2.5,fert:0.15,lime:0}, equip:['Drill','Header_Grain'], yield:80, price:5.10 }, 
+            'Sorghum': { name: 'Sorghum', color: 'bg-orange-600', plantMonths: [4, 6], harvestMonths: [8, 9, 10], steps: ['Tillage', 'Fertilizer', 'Plant', 'Harvest'], inputs: {seed:'seed_sorghum',seedRate:0.4,fert:0.2,lime:0}, equip:['Planter','Header_Grain'], yield:110, price:6.20 }, 
+            'Sunflower': { name: 'Sunflower', color: 'bg-yellow-300', plantMonths: [4, 6], harvestMonths: [8, 9], steps: ['Tillage', 'Plant', 'Harvest'], inputs: {seed:'seed_sunflower',seedRate:0.3,fert:0.2,lime:0}, equip:['Planter','Header_Sunflower'], yield:1800, price:0.22 } 
+        };
+        
         const BUILDINGS = { 'shed_s': { name: 'Small Machine Shed', cost: 65000, category: 'Storage', capacity: 5, buildTime: 14 * DAY_MS }, 'shed_l': { name: 'Large Machine Shed', cost: 150000, category: 'Storage', capacity: 15, buildTime: 30 * DAY_MS }, 'bin_s': { name: 'Grain Bin (10k bu)', cost: 45000, category: 'Storage', capacity: 10000, buildTime: 5 * DAY_MS }, 'bin_l': { name: 'Grain Bin (50k bu)', cost: 110000, category: 'Storage', capacity: 50000, buildTime: 14 * DAY_MS }, 'fuel_s': { name: 'Farm Fuel Tank (1k gal)', cost: 12500, category: 'Infrastructure', capacity: 1000, buildTime: 2 * DAY_MS }, 'fuel_l': { name: 'Fuel Depot (5k gal)', cost: 35000, category: 'Infrastructure', capacity: 5000, buildTime: 7 * DAY_MS }, 'barn': { name: 'Dairy Barn', cost: 450000, capacity: 200, category: 'Livestock', type: 'Livestock_Dairy', input: 'tmr', output: 'milk', buildTime: 90 * DAY_MS }, 'feedlot': { name: 'Beef Feedlot', cost: 120000, capacity: 100, category: 'Livestock', type: 'Livestock_Beef', input: 'corn', output: 'manure', buildTime: 45 * DAY_MS }, 'hog': { name: 'Hog Barn', cost: 250000, capacity: 1000, category: 'Livestock', type: 'Livestock_Hog', input: 'corn', output: 'manure', buildTime: 60 * DAY_MS }, 'coop': { name: 'Chicken Coop', cost: 85000, capacity: 5000, category: 'Livestock', type: 'Livestock_Poultry', input: 'wheat', output: 'eggs', buildTime: 30 * DAY_MS }, 'pasture': { name: 'Sheep Pasture', cost: 25000, capacity: 100, category: 'Livestock', type: 'Livestock_Sheep', input: 'hay', output: 'wool', buildTime: 7 * DAY_MS } };
         const ANIMALS = { 'cow': { name: 'Holstein', cost: 1800, building: 'Livestock_Dairy', dailyFeed: 50, dailyWater: 30, dailyStraw: 10, productRate: 0.8 }, 'steer': { name: 'Angus', cost: 1100, building: 'Livestock_Beef', dailyFeed: 40, dailyWater: 25, dailyStraw: 8 }, 'pig': { name: 'Hog', cost: 150, building: 'Livestock_Hog', dailyFeed: 6, dailyWater: 4, dailyStraw: 1 }, 'hen': { name: 'Hen', cost: 5, building: 'Livestock_Poultry', dailyFeed: 0.25, dailyWater: 0.1, dailyStraw: 0, productRate: 0.9 }, 'sheep': { name: 'Sheep', cost: 250, building: 'Livestock_Sheep', dailyFeed: 4, dailyWater: 2, dailyStraw: 1, productRate: 0.05 } };
-        const EQUIPMENT = [ { id: 'jd_8r', name: 'JD 8R 340', cost: 410000, cat: 'Tractor' }, { id: 'cih_mag', name: 'Case IH 310', cost: 385000, cat: 'Tractor' }, { id: 'cih_rip', name: 'Ripper 875', cost: 95000, cat: 'Plow' }, { id: 'jd_vt', name: 'Vertical Till', cost: 125000, cat: 'Cultivator' }, { id: 'jd_plnt', name: 'JD 1775NT', cost: 215000, cat: 'Planter' }, { id: 'gp_drl', name: 'Grain Drill', cost: 85000, cat: 'Drill' }, { id: 'pot_plnt', name: 'Potato Planter', cost: 65000, cat: 'Planter_Potato' }, { id: 'jd_x9', name: 'JD X9 Combine', cost: 850000, cat: 'Combine' }, { id: 'cot_pick', name: 'Cotton Picker', cost: 950000, cat: 'Harvester_Cotton' }, { id: 'pot_harv', name: 'Potato Harv', cost: 450000, cat: 'Harvester_Potato' }, { id: 'beet_harv', name: 'Beet Harv', cost: 650000, cat: 'Harvester_Beet' }, { id: 'pnut_harv', name: 'Peanut Harv', cost: 180000, cat: 'Harvester_Peanut' }, { id: 'hd_corn', name: 'Corn Header', cost: 95000, cat: 'Header_Corn' }, { id: 'hd_grain', name: 'Draper Header', cost: 110000, cat: 'Header_Grain' }, { id: 'hd_sun', name: 'Sun Header', cost: 65000, cat: 'Header_Sunflower' }, { id: 'mix', name: 'TMR Mixer', cost: 85000, cat: 'Mixer' }, { id: 'tank', name: 'Water Tanker', cost: 25000, cat: 'Tanker' }, { id: 'proc', name: 'Bale Proc', cost: 45000, cat: 'Processor' }, { id: 'destone', name: 'De-Stoner', cost: 85000, cat: 'De-Stone' }, { id: 'dig', name: 'Peanut Digger', cost: 45000, cat: 'Digger_Peanut' }, { id: 'mow', name: 'Mower', cost: 55000, cat: 'Mower' }, { id: 'bale', name: 'Baler', cost: 165000, cat: 'Baler' }, { id: 'sprd', name: 'Spreader', cost: 45000, cat: 'Spreader' }, { id: 'spry', name: 'Sprayer', cost: 499000, cat: 'Sprayer' }, { id: 'plow_snow', name: 'Snow Plow', cost: 12000, cat: 'Snow Plow' }, { id: 'salt_sprd', name: 'Salt Spreader', cost: 8500, cat: 'Salt Spreader' } ];
+        const EQUIPMENT = [ 
+            { id: 'jd_8r', name: 'JD 8R 340', cost: 410000, cat: 'Tractor' }, 
+            { id: 'cih_mag', name: 'Case IH 310', cost: 385000, cat: 'Tractor' }, 
+            { id: 'cih_rip', name: 'Ripper 875', cost: 95000, cat: 'Plow' }, 
+            { id: 'jd_vt', name: 'Vertical Till', cost: 125000, cat: 'Cultivator' }, 
+            { id: 'jd_plnt', name: 'JD 1775NT', cost: 215000, cat: 'Planter' }, 
+            { id: 'gp_drl', name: 'Grain Drill', cost: 85000, cat: 'Drill' }, 
+            { id: 'pot_plnt', name: 'Potato Planter', cost: 65000, cat: 'Planter_Potato' }, 
+            { id: 'jd_x9', name: 'JD X9 Combine', cost: 850000, cat: 'Combine' }, 
+            { id: 'cot_pick', name: 'Cotton Picker', cost: 950000, cat: 'Harvester_Cotton' }, 
+            { id: 'pot_harv', name: 'Potato Harv', cost: 450000, cat: 'Harvester_Potato' }, 
+            { id: 'beet_harv', name: 'Beet Harv', cost: 650000, cat: 'Harvester_Beet' }, 
+            { id: 'pnut_harv', name: 'Peanut Harv', cost: 180000, cat: 'Harvester_Peanut' }, 
+            { id: 'hd_corn', name: 'Corn Header', cost: 95000, cat: 'Header_Corn' }, 
+            { id: 'hd_grain', name: 'Draper Header', cost: 110000, cat: 'Header_Grain' }, 
+            { id: 'hd_sun', name: 'Sun Header', cost: 65000, cat: 'Header_Sunflower' }, 
+            { id: 'mix', name: 'TMR Mixer', cost: 85000, cat: 'Mixer' }, 
+            { id: 'tank', name: 'Water Tanker', cost: 25000, cat: 'Tanker' }, 
+            { id: 'proc', name: 'Bale Proc', cost: 45000, cat: 'Processor' }, 
+            { id: 'destone', name: 'De-Stoner', cost: 85000, cat: 'De-Stone' }, 
+            { id: 'dig', name: 'Peanut Digger', cost: 45000, cat: 'Digger_Peanut' }, 
+            { id: 'mow', name: 'Mower', cost: 55000, cat: 'Mower' }, 
+            { id: 'bale', name: 'Baler', cost: 165000, cat: 'Baler' }, 
+            { id: 'sprd', name: 'Spreader', cost: 45000, cat: 'Spreader' }, 
+            { id: 'spry', name: 'Sprayer', cost: 499000, cat: 'Sprayer' }, 
+            { id: 'plow_snow', name: 'Snow Plow', cost: 12000, cat: 'Snow Plow' }, 
+            { id: 'salt_sprd', name: 'Salt Spreader', cost: 8500, cat: 'Salt Spreader' },
+            { id: 'washer', name: 'Pressure Washer', cost: 2500, cat: 'Washer' },
+            { id: 'mower_ride', name: 'Zero Turn Mower', cost: 12000, cat: 'LawnMower' },
+            { id: 'skid', name: 'Skid Steer', cost: 45000, cat: 'SkidSteer' },
+            { id: 'truck', name: 'Service Truck', cost: 65000, cat: 'Truck' },
+            { id: 'g_trailer', name: 'Grain Trailer', cost: 55000, cat: 'Trailer' }
+        ];
         const SUPPLIES = { 'seed_corn': 320, 'seed_soy': 74, 'seed_wheat': 28, 'seed_hay': 210, 'seed_cotton': 650, 'seed_rice': 35, 'seed_potato': 18, 'seed_beet': 180, 'seed_canola': 450, 'seed_sunflower': 280, 'seed_oats': 18, 'seed_barley': 22, 'seed_sorghum': 150, 'seed_peanut': 90, 'fert': 750, 'lime': 45, 'tmr': 250, 'straw': 100, 'salt': 80 };
         const EMP_ROLES = { 'Hand': { name: 'Farm Hand', wage: 20, desc: 'Field Operations' }, 'Herd': { name: 'Herdsman', wage: 25, desc: 'Livestock Care' }, 'Mech': { name: 'Mechanic', wage: 35, desc: 'Maintenance' }, 'Vet': { name: 'Vet Specialist', wage: 60, desc: 'Animal Health' } };
-        const EMP_NAMES = ['John D.', 'Sarah C.', 'Mike R.', 'Emily W.', 'David B.', 'Jess M.', 'Alex P.', 'Sam T.'];
+        const ROLE_NAMES = { 'Hand': ["Caleb D.", "Wyatt E.", "Luke S.", "Beau T.", "Tucker J.", "Hank R.", "Dusty M.", "Clay B."], 'Herd': ["Clara M.", "Annie P.", "Gus H.", "Shep L.", "Colt R.", "Daisy F.", "Walker T.", "Tex S."], 'Mech': ["Mac D.", "Axel R.", "Rod S.", "Gage T.", "Smitty W.", "Diesel J.", "Rusty B.", "Sparky M."], 'Vet': ["Dr. Smith", "Dr. Wells", "Dr. Grey", "Dr. House", "Dr. Quinn", "Dr. Stone", "Dr. Drake", "Dr. Cole"] };
+
+        const MISC_JOBS = [
+            { id: 'manure', name: 'Scrape Alleys (Manure)', freq: 'Daily', role: 'Hand', req: 'SkidSteer', dur: 1800000 },
+            { id: 'bin', name: 'Monitor Bin Temp', freq: 'Daily', role: 'Mech', req: null, dur: 900000 },
+            { id: 'shop', name: 'Shop Cleanup', freq: 'Daily', role: 'Hand', req: null, dur: 1800000 },
+            { id: 'fence', name: 'Fence Repair', freq: 'Weekly', role: 'Hand', req: 'Truck', dur: 7200000 },
+            { id: 'wash', name: 'Wash Equipment', freq: 'Weekly', role: 'Mech', req: 'Washer', dur: 3600000 },
+            { id: 'mow', name: 'Mow Grounds', freq: 'Weekly', role: 'Hand', req: 'LawnMower', seasonal: true, dur: 5400000 },
+            { id: 'rock', name: 'Pick Rocks (Field)', freq: 'Weekly', role: 'Hand', req: 'Truck', seasonal: true, dur: 10800000 }
+        ];
+
+        // MARKET / CONTRACTS
+        const BUYERS = ["Garden State Ethanol", "Trenton Mills", "Newark Exports", "BioFuel Sys", "Jersey Feeds", "Atlantic Grain", "Camden Processing", "Liberty Logistics", "Princeton Bio", "Shoreline Foods"];
+
+        // SMART DROPDOWN COMPONENT (Defined Outside App)
+        const RenderSelect = ({ label, categories, selected, onChange, inventory, getEq, isBusy }) => {
+            const available = inventory.filter(i => {
+                const eq = getEq(i.itemId);
+                if(!eq) return false;
+                return !isBusy(i.uid) && categories.includes(eq.cat);
+            });
+            const missing = available.length === 0;
+            
+            return (
+                <div>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold mb-1 block">
+                        {label} <span className="text-slate-600">({categories.join('/')})</span>
+                    </label>
+                    <select 
+                        className={`w-full p-3 rounded-lg text-sm outline-none border ${missing ? 'bg-red-900/20 border-red-500 text-red-300' : 'bg-slate-900 border-slate-700 text-white'}`}
+                        onChange={(e) => onChange(e.target.value)}
+                        value={selected || ""}
+                        disabled={missing}
+                    >
+                        <option value="">{missing ? `MISSING: ${categories[0]}` : "-- Select --"}</option>
+                        {available.map(i => {
+                            const eq = getEq(i.itemId);
+                            return <option key={i.uid} value={i.uid}>{eq ? eq.name : 'Unknown'} ({i.ownership==='leased'?'L':'O'})</option>
+                        })}
+                    </select>
+                </div>
+            );
+        };
 
         function App() {
+            const isResetting = useRef(false);
+            const [fuelAmount, setFuelAmount] = useState(100);
+            const [sellAmount, setSellAmount] = useState(0);
+
             // --- STATE ---
             const [gameState, setGameState] = useState(() => {
                 try {
-                    const saved = localStorage.getItem('jersey_roots_v22_6_STABLE'); // FRESH SAVE
-                    if(saved) return JSON.parse(saved);
+                    const saved = localStorage.getItem(SAVE_KEY); 
+                    if(saved) {
+                        const parsed = JSON.parse(saved);
+                        // SAFE MERGE: Ensure new arrays (contracts, deliveries) exist in old saves
+                        return {
+                            ...parsed,
+                            contracts: parsed.contracts || [],
+                            activeContracts: parsed.activeContracts || [],
+                            deliveries: parsed.deliveries || [],
+                            miscTasks: parsed.miscTasks || MISC_JOBS.map(j => ({...j, status: 'Due', lastDone: 0})),
+                            lastDayReset: parsed.lastDayReset || 0,
+                            lastWeekReset: parsed.lastWeekReset || 0,
+                            lastTaxMonth: parsed.lastTaxMonth !== undefined ? parsed.lastTaxMonth : -1,
+                            facilities: parsed.facilities || [],
+                            consumables: parsed.consumables || { 'diesel': 500 },
+                            fields: parsed.fields || Array.from({length: 50}, (_, i) => ({ id:i+1, owned: i<3, acres: Math.floor(Math.random()*300)+50, state: 'Fallow', cropPlan: null })),
+                        };
+                    }
                 } catch(e) { console.log("Save error"); }
                 
+                // DEFAULT STATE FOR NEW GAME
+                const initialTasks = MISC_JOBS.map(j => ({...j, status: 'Due', lastDone: 0}));
+
                 return {
                     money: 6000000, 
                     loan: 0, 
@@ -105,6 +262,12 @@
                     transactions: [],
                     employees: [{id:1, name:'Owner', hourlyRate:0, role:'Owner', status:'Idle'}],
                     lastPayroll: null,
+                    miscTasks: initialTasks,
+                    lastDayReset: 0,
+                    lastWeekReset: 0,
+                    lastTaxMonth: -1,
+                    contracts: [], // Available
+                    activeContracts: [], // Signed
                     facilities: [
                         {id:'start', key:'shed_s', type:'Storage', category:'Storage', animals:null},
                         {id:'fuelstart', key:'fuel_s', type:'Infrastructure', category:'Infrastructure', animals:null}
@@ -121,7 +284,46 @@
             const [modal, setModal] = useState(null);
             const [storeTab, setStoreTab] = useState('eq');
 
-            // WEATHER API
+            // HELPER (Safe Version)
+            const getEq = (id) => {
+                const item = EQUIPMENT.find(e => e.id === id);
+                return item || { id: 'unknown', name: 'Unknown Item', cat: 'Misc', cost: 0 };
+            };
+
+            // SEASONAL PRICE MODIFIER
+            const getSeasonalPrice = (cropKey, basePrice, month) => {
+                let mod = 1.0;
+                if(cropKey === 'Corn' && [9,10,11].includes(month)) mod = 0.8; 
+                if(cropKey === 'Corn' && [5,6,7].includes(month)) mod = 1.2; 
+                if(cropKey === 'Wheat' && [6,7].includes(month)) mod = 0.8;
+                if(cropKey === 'Wheat' && [0,1].includes(month)) mod = 1.2;
+                if(cropKey === 'Soy' && [9,10].includes(month)) mod = 0.85;
+                return basePrice * mod * (0.95 + Math.random() * 0.1);
+            };
+
+            const generateContract = () => {
+                const cropKey = Object.keys(CROPS)[Math.floor(Math.random() * Object.keys(CROPS).length)];
+                const crop = CROPS[cropKey];
+                const buyer = BUYERS[Math.floor(Math.random() * BUYERS.length)];
+                const qty = Math.floor(Math.random() * 50000) + 5000;
+                const price = crop.price * (1.1 + Math.random() * 0.2);
+                
+                // UPDATED TIME: 300 to 365 Days
+                const days = Math.floor(Math.random() * 65) + 300; 
+                
+                return {
+                    id: Math.random(),
+                    buyer,
+                    crop: cropKey,
+                    qty,
+                    price,
+                    deadline: Date.now() + (days * DAY_MS),
+                    delivered: 0,
+                    penalty: (qty * price) * 0.5 
+                };
+            };
+
+            // MAIN LOOP
             useEffect(() => {
                 const fetchWeather = async () => {
                     try {
@@ -145,52 +347,88 @@
                 };
                 fetchWeather();
                 const wInterval = setInterval(fetchWeather, 900000);
-                return () => clearInterval(wInterval);
-            }, []);
-
-            useEffect(() => {
+                
                 const t = setInterval(() => {
                     const ct = Date.now();
-                    const currentDate = new Date(ct);
+                    const dateObj = new Date(ct);
+                    const dayNum = dateObj.getDate();
                     setNow(ct);
                     
                     setGameState(prev => {
-                        let { money, loan, activeJobs, facilities, consumables, employees, fields, deliveries, inventory, construction, lastPayroll, transactions, snowLevel, weather } = prev;
+                        let { money, loan, activeJobs, facilities, consumables, employees, fields, deliveries, inventory, construction, lastPayroll, transactions, snowLevel, weather, miscTasks, lastDayReset, lastWeekReset, lastTaxMonth, contracts, activeContracts } = prev;
                         
-                        // SAFE ARRAY DEFAULTS
-                        activeJobs = activeJobs || [];
-                        facilities = facilities || [];
-                        employees = employees || [];
-                        inventory = inventory || [];
-                        construction = construction || [];
+                        // SAFE DEFAULTS FOR NEW KEYS (Safety check inside loop too)
+                        contracts = contracts || [];
+                        activeContracts = activeContracts || [];
                         deliveries = deliveries || [];
-                        transactions = transactions || [];
 
-                        // PAYROLL
-                        const dateString = currentDate.toLocaleDateString();
-                        const dayOfWeek = currentDate.getDay(); 
-                        if(dayOfWeek === 5 && lastPayroll !== dateString) {
-                            let totalPayroll = 0;
-                            employees.forEach(e => {
-                                if(e.id !== 1) totalPayroll += (e.hourlyRate * 40) + (e.hourlyRate * 1.5 * 10);
-                            });
-                            if(totalPayroll > 0) {
-                                if(money >= totalPayroll) { 
-                                    money -= totalPayroll; 
-                                    transactions = [{id: Date.now(), desc: `Payroll`, amount: -totalPayroll, date: ct}, ...transactions].slice(0, 50);
-                                } else { 
-                                    const deficit = totalPayroll - money; money = 0; loan += deficit; 
-                                    transactions = [{id: Date.now(), desc: `Payroll Loan`, amount: -totalPayroll, date: ct}, ...transactions].slice(0, 50);
+                        // GENERATE CONTRACTS DAILY
+                        if(dayNum !== lastDayReset) {
+                            contracts = Array.from({length: 5}, () => generateContract());
+                            miscTasks = miscTasks.map(t => t.freq === 'Daily' ? {...t, status: 'Due'} : t);
+                            lastDayReset = dayNum;
+                        }
+                        if(dateObj.getDay() === 1 && dayNum !== lastWeekReset) {
+                             miscTasks = miscTasks.map(t => {
+                                if(t.freq === 'Weekly') {
+                                    if(t.seasonal && (dateObj.getMonth() < 3 || dateObj.getMonth() > 10 || snowLevel > 5)) return {...t, status: 'Skipped'};
+                                    return {...t, status: 'Due'};
                                 }
+                                return t;
+                            });
+                            lastWeekReset = dayNum;
+                        }
+                        
+                        // CONTRACT CHECK
+                        activeContracts = activeContracts.filter(c => {
+                            if(ct > c.deadline) {
+                                transactions = [{id: ct, desc: `Breach: ${c.buyer} Lawsuit`, amount: -c.penalty, date: ct}, ...transactions].slice(0,50);
+                                money -= c.penalty;
+                                return false; 
+                            }
+                            return true;
+                        });
+                        
+                        // GROWTH CHECK (Real Season Logic)
+                        const currentMonth = dateObj.getMonth();
+                        fields = fields.map(f => {
+                            if (f.state === 'Growing') {
+                                const crop = CROPS[f.cropPlan.key];
+                                // If current month is in harvest list, it becomes Ready
+                                if (crop.harvestMonths.includes(currentMonth)) {
+                                    return { ...f, state: 'Ready' };
+                                }
+                            }
+                            return f;
+                        });
+                        
+                        const dateString = dateObj.toLocaleDateString();
+                        if(dateObj.getDay() === 5 && lastPayroll !== dateString) {
+                            let totalPayroll = 0;
+                            employees.forEach(e => { if(e.id !== 1) totalPayroll += (e.hourlyRate * 40) + (e.hourlyRate * 1.5 * 10); });
+                            if(totalPayroll > 0) {
+                                if(money >= totalPayroll) { money -= totalPayroll; transactions = [{id: ct, desc: `Payroll`, amount: -totalPayroll, date: ct}, ...transactions].slice(0, 50); } 
+                                else { const deficit = totalPayroll - money; money = 0; loan += deficit; transactions = [{id: ct, desc: `Payroll Loan`, amount: -totalPayroll, date: ct}, ...transactions].slice(0, 50); }
                                 lastPayroll = dateString; 
                             }
                         }
+
+                        // TAXES (MONTHLY)
+                        const taxMonth = dateObj.getMonth();
+                        if (taxMonth !== lastTaxMonth && lastTaxMonth !== -1) { 
+                             const ownedAcres = fields.filter(f => f.owned).reduce((sum, f) => sum + f.acres, 0);
+                             const taxBill = BASE_FARM_TAX + (ownedAcres * TAX_PER_ACRE);
+                             if(money >= taxBill) { money -= taxBill; transactions = [{id: ct, desc: `Property & Land Tax`, amount: -taxBill, date: ct}, ...transactions].slice(0, 50); } 
+                             else { const deficit = taxBill - money; money = 0; loan += deficit; transactions = [{id: ct, desc: `Tax Loan (Overdue)`, amount: -taxBill, date: ct}, ...transactions].slice(0, 50); }
+                             lastTaxMonth = taxMonth;
+                        }
+                        if(lastTaxMonth === -1) lastTaxMonth = taxMonth;
+
 
                         if(loan > 0 && Math.random() > 0.999) { loan += loan * 0.001; }
 
                         let jobs = [], finished = [], jobMoney = 0;
 
-                        // CONSTRUCTION
                         const finConst = construction.filter(c => ct >= c.endTime);
                         finConst.forEach(c => {
                             const def = BUILDINGS[c.key];
@@ -198,16 +436,14 @@
                         });
                         const pendingConst = construction.filter(c => ct < c.endTime);
 
-                        // DELIVERIES
                         const arrivedDel = deliveries.filter(d => ct >= d.at);
                         arrivedDel.forEach(d => {
-                            if(d.type === 'eq') inventory.push({uid:Math.random().toString(36).substr(2,9), itemId:d.id, fuel: 100, hours:0, condition:100, lastService:0});
+                            if(d.type === 'eq') inventory.push({uid:Math.random().toString(36).substr(2,9), itemId:d.id, fuel: 100, hours:0, condition:100, lastService:0, ownership: d.mode === 'lease' ? 'leased' : 'owned'});
                             else if(d.type === 'anim') facilities = facilities.map(f => f.id === d.targetId ? { ...f, animals: { type: f.animals ? f.animals.type : d.id, count: (f.animals ? f.animals.count : 0) + d.qty } } : f);
                             else consumables[d.id] = (consumables[d.id]||0) + d.qty;
                         });
                         const pendingDel = deliveries.filter(d => ct < d.at);
 
-                        // JOBS
                         activeJobs.forEach(j => {
                             if(ct - j.start >= j.dur) { finished.push(j); } 
                             else { 
@@ -215,11 +451,10 @@
                                 j.res.forEach(resId => {
                                     inventory = inventory.map(item => {
                                         if(item.uid === resId && item.hours !== undefined) {
-                                            const addedHours = 1/60; 
-                                            const newHours = (item.hours || 0) + addedHours;
+                                            const newHours = (item.hours || 0) + (1/60);
                                             const hoursSinceService = newHours - (item.lastService || 0);
                                             const rate = hoursSinceService > SERVICE_INTERVAL ? OVERDUE_RATE : WEAR_RATE;
-                                            const newCond = Math.max(0, (item.condition || 100) - (rate * addedHours * 0.01));
+                                            const newCond = Math.max(0, (item.condition || 100) - (rate * (1/60) * 0.01));
                                             return { ...item, hours: newHours, condition: newCond };
                                         }
                                         return item;
@@ -229,20 +464,35 @@
                         });
 
                         finished.forEach(j => {
-                            employees = employees.map(e => e.id === j.emp ? {...e, status:'Idle'} : e);
+                            employees = employees.map(e => (e.id === j.emp || e.id === j.emp2) ? {...e, status:'Idle'} : e);
                             if(j.type === 'maintenance') inventory = inventory.map(i => i.uid === j.tid ? { ...i, condition: 100, lastService: i.hours } : i);
                             if(j.type === 'snow') snowLevel = 0; 
+                            if(j.type === 'misc') miscTasks = miscTasks.map(t => t.id === j.tid ? {...t, status:'Done', lastDone: ct} : t);
                             if(j.type === 'field') {
                                 fields = fields.map(f => {
                                     if(f.id === j.tid) {
+                                        // Handle Harvest Final Step
                                         if(j.step === 'Harvest') {
                                             const crop = CROPS[f.cropPlan.key];
                                             const yieldAmt = f.acres * crop.yield;
                                             consumables[f.cropPlan.key.toLowerCase()] = (consumables[f.cropPlan.key.toLowerCase()]||0) + yieldAmt;
                                             return { ...f, state: 'Stubble', cropPlan: null };
                                         }
-                                        const ni = f.cropPlan.idx + 1;
-                                        return { ...f, state: CROPS[f.cropPlan.key].steps[ni]||'Growing', cropPlan: {...f.cropPlan, idx: ni} };
+                                        
+                                        // Standard Progression
+                                        const cropDef = CROPS[f.cropPlan.key];
+                                        // Check if we are at the step BEFORE Harvest
+                                        // cropDef.steps = [Till, ..., Plant, Harvest]
+                                        // If current idx is length-2, next is Harvest. So we go to Growing.
+                                        
+                                        const isLastStepBeforeHarvest = f.cropPlan.idx === cropDef.steps.length - 2;
+                                        
+                                        if (isLastStepBeforeHarvest) {
+                                            return { ...f, state: 'Growing' }; 
+                                        } else {
+                                            const ni = f.cropPlan.idx + 1;
+                                            return { ...f, state: cropDef.steps[ni], cropPlan: {...f.cropPlan, idx: ni} };
+                                        }
                                     }
                                     return f;
                                 });
@@ -250,9 +500,9 @@
                             if(j.type === 'chore') {
                                 facilities = facilities.map(fac => {
                                     if(fac.id === j.tid) {
-                                        if(j.task === 'feed') return {...fac, feed: Math.min(100, fac.feed+50)};
+                                        if(j.task === 'feed') return {...fac, feed: Math.min(100, fac.feed+100)}; 
                                         if(j.task === 'water') return {...fac, water: Math.min(100, fac.water+100)};
-                                        if(j.task === 'straw') return {...fac, straw: Math.min(100, fac.straw+50)};
+                                        if(j.task === 'straw') return {...fac, straw: Math.min(100, fac.straw+100)};
                                         if(j.task === 'sell') { jobMoney += fac.output * 20; return {...fac, output: 0}; }
                                     }
                                     return fac;
@@ -260,79 +510,191 @@
                             }
                         });
 
-                        if(Math.random() > 0.1) { 
-                            facilities = facilities.map(f => {
-                                if(!f.animals) return f;
-                                const def = ANIMALS[f.animals.type];
-                                const c = f.animals.count;
-                                let feed = Math.max(0, f.feed - 0.05); 
-                                let water = Math.max(0, f.water - 0.08); 
-                                let straw = Math.max(0, f.straw - 0.02);
-                                let out = f.output;
-                                if(feed > 0 && water > 0) out += (def.productRate ? def.productRate*c*0.001 : 0);
-                                return {...f, feed, water, straw, output: out};
-                            });
-                        }
+                        facilities = facilities.map(f => {
+                            if(!f.animals) return f;
+                            const def = ANIMALS[f.animals.type];
+                            const c = f.animals.count;
+                            // CHANGED: Reduced decay rate from 0.0005 to 0.00025 (Doubled time)
+                            const decay = 0.00025 * c; 
+                            let feed = Math.max(0, f.feed - decay); 
+                            let water = Math.max(0, f.water - (decay*1.2)); 
+                            let straw = Math.max(0, f.straw - (decay*0.5));
+                            let out = f.output;
+                            if(feed > 0 && water > 0) out += (def.productRate ? def.productRate*c*0.001 : 0);
+                            
+                            if ((feed <= 0 || water <= 0) && c > 0) {
+                                if(Math.random() < 0.01) {
+                                    f.animals.count -= 1;
+                                    transactions.unshift({id: Date.now(), desc: `Loss: ${def.name} died (Neglect)`, amount: 0, date: Date.now()});
+                                }
+                            }
+                            if(f.animals.count <= 0) f.animals = null;
+                            return {...f, feed, water, straw, output: out};
+                        });
 
-                        if(jobMoney > 0) transactions = [{id: Date.now(), desc: 'Income', amount: jobMoney, date: ct}, ...transactions].slice(0, 50);
+                        if(jobMoney > 0) transactions = [{id: ct, desc: 'Income', amount: jobMoney, date: ct}, ...transactions].slice(0, 50);
 
-                        return { ...prev, money: money+jobMoney, loan, fields, facilities, activeJobs: jobs, construction: pendingConst, employees, deliveries: pendingDel, inventory, consumables, lastPayroll, transactions, weather, snowLevel };
+                        return { ...prev, money: money+jobMoney, loan, fields, facilities, activeJobs: jobs, construction: pendingConst, employees, deliveries: pendingDel, inventory, consumables, lastPayroll, transactions, weather, snowLevel, miscTasks, lastDayReset, lastWeekReset, lastTaxMonth, contracts, activeContracts };
                     });
                 }, 1000);
-                return () => clearInterval(t);
+                return () => { clearInterval(t); clearInterval(wInterval); }
             }, []);
 
-            useEffect(() => { localStorage.setItem('jersey_roots_v22_6_STABLE', JSON.stringify(gameState)); }, [gameState]);
+            useEffect(() => { 
+                if(!isResetting.current) localStorage.setItem(SAVE_KEY, JSON.stringify(gameState)); 
+            }, [gameState]);
 
-            const getEq = (id) => EQUIPMENT.find(e => e.id === id);
-            const isBusy = (uid) => (gameState.activeJobs||[]).some(j => j.res.includes(uid));
+            // ... (Helper functions getEq, isBusy, formatTime, getStorageStats, getHRRequirements same as v25.3) ...
             
+            const isBusy = (uid) => (gameState.activeJobs||[]).some(j => j.res.includes(uid));
+            const formatTime = (ms) => {
+                const totalSec = Math.floor(ms / 1000);
+                const d = Math.floor(totalSec / 86400); 
+                const h = Math.floor((totalSec % 86400) / 3600);
+                const m = Math.floor((totalSec % 3600) / 60);
+                if (d > 0) return `${d}d ${h}h`;
+                if (h > 0) return `${h}h ${m}m`;
+                return `0h ${m}m`;
+            };
             const getStorageStats = () => {
                 let cropUsed = 0; Object.keys(CROPS).forEach(k => cropUsed += (gameState.consumables[k.toLowerCase()]||0));
                 let grainCap = 0, machineCap = 0, fuelCap = 0;
                 (gameState.facilities||[]).forEach(f => {
-                    const def = BUILDINGS[f.key];
-                    if(def.category === 'Storage') { if(def.type === 'Silo') grainCap += def.capacity; else machineCap += def.capacity; }
-                    if(def.category === 'Infrastructure') fuelCap += def.capacity;
+                    // SAFETY CHECK: Handle missing buildings from old saves
+                    if(BUILDINGS[f.key]) {
+                        const def = BUILDINGS[f.key];
+                        if(def.category === 'Storage') { if(def.type === 'Silo') grainCap += def.capacity; else machineCap += def.capacity; }
+                        if(def.category === 'Infrastructure') fuelCap += def.capacity;
+                    }
                 });
                 if(grainCap === 0) grainCap = 5000; if(fuelCap === 0) fuelCap = 100;
                 return { cropUsed, grainCap, machineCap, machineUsed: (gameState.inventory||[]).length, fuelCap };
             };
-
             const getHRRequirements = () => {
                 let acres = 0; (gameState.fields||[]).filter(f=>f.owned).forEach(f => acres += f.acres);
                 let animalCount = 0; (gameState.facilities||[]).forEach(f => { if(f.animals) animalCount += f.animals.count; });
-                let fleet = (gameState.inventory||[]).length;
-                return { 'Hand': Math.max(1, Math.ceil(acres / 300)), 'Herd': animalCount > 0 ? Math.ceil(animalCount / 50) : 0, 'Mech': Math.max(0, Math.ceil(fleet / 10)), 'Vet': animalCount > 0 ? 1 : 0 };
+                return { 'Hand': Math.max(1, Math.ceil(acres / 300)), 'Herd': animalCount > 0 ? Math.ceil(animalCount / 50) : 0, 'Mech': Math.max(0, Math.ceil(gameState.inventory.length / 10)), 'Vet': animalCount > 0 ? 1 : 0 };
             };
 
+            // ... (Start Job functions same as v25.3) ...
             const startJob = (d) => {
-                const { type, tid, tr, imp, emp, dur, step, task } = d;
+                const { type, tid, tr, imp, emp, dur, step, task, tr2, imp2, emp2 } = d;
+                
                 const tractor = gameState.inventory.find(i => i.uid === tr);
                 if(tractor && tractor.fuel < 10) return alert("Low Fuel!");
-                if(tractor && (tractor.condition||100) <= 0) return alert("Tractor Broken!");
-                const implement = gameState.inventory.find(i => i.uid === imp);
-                if(implement && (implement.condition||100) <= 0) return alert("Implement Broken!");
+                if(tr2) {
+                    const t2 = gameState.inventory.find(i => i.uid === tr2);
+                    if(t2 && t2.fuel < 10) return alert("Transport Vehicle Low Fuel!");
+                }
 
-                let finalDur = 10000;
+                // Deduct consumables for chores
+                let updatedConsumables = { ...gameState.consumables };
+                if(type === 'chore') {
+                    const fac = gameState.facilities.find(f => f.id === tid);
+                    // SAFETY CHECK
+                    if(!BUILDINGS[fac.key]) return alert("Corrupt Building Data");
+                    
+                    const bldg = BUILDINGS[fac.key];
+                    let res = null;
+                    if(task === 'feed') res = bldg.input; 
+                    else if(task === 'straw') res = 'straw';
+                    if(res) {
+                        if((updatedConsumables[res] || 0) < FEED_PER_CHORE) return alert(`Not enough ${res.toUpperCase()}!`);
+                        updatedConsumables[res] -= FEED_PER_CHORE;
+                    }
+                }
+
+                let finalDur = dur || 10000;
                 if(type === 'field') {
                     const f = gameState.fields.find(fd => fd.id === tid);
                     let rate = 20; 
-                    if(step.includes('Tillage')) rate = 12; else if(step === 'Plant') rate = 24; else if(step === 'Harvest') rate = 16; else if(step === 'Spray') rate = 90; else rate = 60;
+                    if(step.includes('Tillage')) rate = 12; else if(step === 'Plant') rate = 24; else if(step === 'Harvest') rate = 16; else if(step === 'Spray') rate = 90; 
                     finalDur = (f.acres / rate) * HOUR_MS; 
                 } else if(type === 'chore') finalDur = 1800000; 
                 else if(type === 'maintenance') finalDur = 3600000;
                 else if(type === 'snow') finalDur = SNOW_JOB_TIME;
 
+                setGameState(prev => {
+                    let newTasks = prev.miscTasks;
+                    if(type === 'misc') newTasks = newTasks.map(t => t.id === tid ? {...t, status:'Working'} : t);
+                    
+                    let updatedEmps = prev.employees.map(e => e.id == (emp||1) ? {...e, status:'Working'} : e);
+                    if(emp2) updatedEmps = updatedEmps.map(e => e.id == emp2 ? {...e, status:'Working'} : e);
+                    
+                    return {
+                        ...prev, 
+                        miscTasks: newTasks,
+                        consumables: updatedConsumables,
+                        money: type === 'maintenance' ? prev.money - (step === 'Repair' ? REPAIR_COST : SERVICE_COST) : prev.money,
+                        transactions: type === 'maintenance' ? [{id:Date.now(), desc:`Maint (${step})`, amount: -(step === 'Repair' ? REPAIR_COST : SERVICE_COST), date:Date.now()}, ...prev.transactions].slice(0,50) : prev.transactions,
+                        employees: updatedEmps,
+                        inventory: prev.inventory.map(i => (i.uid === tr || i.uid === tr2) ? {...i, fuel: Math.max(0, i.fuel - 20)} : i),
+                        activeJobs: [...prev.activeJobs, { id: Math.random(), type, tid, step, emp: (emp||1), emp2: emp2, task, start: Date.now(), dur: finalDur, res: [tr, imp, tr2, imp2].filter(Boolean) }]
+                    }
+                });
+                setModal(null);
+            };
+
+            // MARKET FUNCTIONS
+            const sellSpot = (crop) => {
+                const amount = parseFloat(sellAmount);
+                if(isNaN(amount) || amount <= 0) return alert("Invalid amount");
+                const currentStock = gameState.consumables[crop.toLowerCase()] || 0;
+                if(amount > currentStock) return alert("Not enough in silo!");
+
+                const currentMonth = new Date(now).getMonth();
+                const price = getSeasonalPrice(crop, CROPS[crop].price, currentMonth);
+                const revenue = amount * price;
+
                 setGameState(prev => ({
-                    ...prev, 
-                    money: type === 'maintenance' ? prev.money - (step === 'Repair' ? REPAIR_COST : SERVICE_COST) : prev.money,
-                    transactions: type === 'maintenance' ? [{id:Date.now(), desc:`Maint (${step})`, amount: -(step === 'Repair' ? REPAIR_COST : SERVICE_COST), date:Date.now()}, ...prev.transactions].slice(0,50) : prev.transactions,
-                    employees: prev.employees.map(e => e.id == emp ? {...e, status:'Working'} : e),
-                    inventory: prev.inventory.map(i => i.uid === tr ? {...i, fuel: Math.max(0, i.fuel - 20)} : i),
-                    activeJobs: [...prev.activeJobs, { id: Math.random(), type, tid, step, emp, task, start: Date.now(), dur: finalDur, res: [tr, imp].filter(Boolean) }]
+                    ...prev,
+                    money: prev.money + revenue,
+                    consumables: {...prev.consumables, [crop.toLowerCase()]: currentStock - amount},
+                    transactions: [{id:Date.now(), desc: `Sold ${amount} ${crop}`, amount: revenue, date:Date.now()}, ...prev.transactions]
                 }));
                 setModal(null);
+            };
+
+            const signContract = (c) => {
+                setGameState(prev => ({
+                    ...prev,
+                    contracts: prev.contracts.filter(x => x.id !== c.id),
+                    activeContracts: [...prev.activeContracts, c]
+                }));
+            };
+
+            const deliverContract = (cId, amount) => {
+                const c = gameState.activeContracts.find(x => x.id === cId);
+                const currentStock = gameState.consumables[c.crop.toLowerCase()] || 0;
+                
+                const actualAmount = Math.min(amount, currentStock, c.qty - c.delivered);
+                if(actualAmount <= 0) return alert("Nothing to deliver or contract full.");
+
+                const newDelivered = c.delivered + actualAmount;
+                const finished = newDelivered >= c.qty;
+
+                setGameState(prev => {
+                    let newMoney = prev.money;
+                    let newTrans = prev.transactions;
+                    let newConsumables = {...prev.consumables, [c.crop.toLowerCase()]: currentStock - actualAmount};
+                    let newActive = prev.activeContracts.map(x => x.id === cId ? {...x, delivered: newDelivered} : x);
+
+                    if(finished) {
+                        const payout = c.qty * c.price;
+                        newMoney += payout;
+                        newTrans = [{id:Date.now(), desc: `Contract Paid: ${c.buyer}`, amount: payout, date:Date.now()}, ...newTrans];
+                        newActive = newActive.filter(x => x.id !== cId); // Remove fulfilled
+                        alert(`Contract Completed! Earned $${payout.toLocaleString()}`);
+                    }
+
+                    return {
+                        ...prev,
+                        money: newMoney,
+                        transactions: newTrans,
+                        consumables: newConsumables,
+                        activeContracts: newActive
+                    };
+                });
             };
 
             const refillTractor = (uid) => {
@@ -342,29 +704,44 @@
                 const amount = Math.min(needed, gameState.consumables.diesel);
                 setGameState(prev => ({ ...prev, consumables: {...prev.consumables, diesel: prev.consumables.diesel - amount}, inventory: prev.inventory.map(i => i.uid === uid ? {...i, fuel: i.fuel + amount} : i) }));
             };
-
-            const buy = (item, type, qty=1) => {
-                const cost = type === 'eq' ? item.cost + 1200 : item.val * qty; 
-                if(gameState.money < cost) return alert("No Funds");
-                let wait = DAY_MS; if(type === 'eq') wait = 5*DAY_MS; if(item.key === 'diesel') wait = 2*DAY_MS; 
-                setGameState(prev => ({ ...prev, money: prev.money - cost, transactions: [{id:Date.now(), desc: `Bought ${item.name||item.key}`, amount: -cost, date: Date.now()}, ...prev.transactions].slice(0,50), deliveries: [...prev.deliveries, { id: item.id||item.key, name: item.name||item.key, type, qty, at: Date.now() + wait }] }));
+            const buy = (item, type, qty=1) => { 
+                const cost = type==='eq'?item.cost:item.val*qty; if(gameState.money<cost) return alert("Funds");
+                const itemName = item.name || item.key;
+                setGameState(prev=>({
+                    ...prev, 
+                    money:prev.money-cost, 
+                    deliveries:[...prev.deliveries, {id:item.id||item.key, name:itemName, type, qty, at:Date.now()+5000}],
+                    transactions: [{id:Date.now(), desc: `Bought ${itemName} (x${qty})`, amount: -cost, date:Date.now()}, ...prev.transactions]
+                })); 
             };
-
+            const buyFuel = () => {
+                const cost = fuelAmount * FUEL_PRICE; if(gameState.money<cost) return alert("Funds");
+                setGameState(prev=>({
+                    ...prev, 
+                    money:prev.money-cost, 
+                    deliveries:[...prev.deliveries, {id:'diesel',name:'Diesel',type:'sup',qty:parseFloat(fuelAmount),at:Date.now()+5000}],
+                    transactions: [{id:Date.now(), desc: `Refuel (${fuelAmount}gal)`, amount: -cost, date:Date.now()}, ...prev.transactions]
+                })); setModal(null);
+            };
             const buyBundle = (type) => {
-                let cost = 0;
-                if(type === 'start') cost = 1500000;
-                if(type === 'mega') cost = 1800000;
-                if(type === 'ultimate') { if(gameState.money < 2000000) return alert("Need $2M capital"); cost = gameState.money - 5000; } 
-                else if(gameState.money < cost) return alert("No Funds");
+                // ... Same as v25.3 logic ...
+                let cost = 1500000; if(type==='mega') cost=1800000; if(type==='ultimate') cost=5000;
+                if(gameState.money<cost) return alert("Funds");
                 
                 let newInv = [], newFacs = [];
                 if(type === 'ultimate') {
-                    newInv = EQUIPMENT.map(e => ({ uid: Math.random().toString(36), itemId: e.id, fuel:100, hours:0, condition:100, lastService:0 }));
-                    newFacs = [{ id: Math.random(), key: 'barn', type: 'Livestock_Dairy', category: 'Livestock', animals: { type: 'cow', count: 2 }, feed:50, water:50, straw:50, manure:0, output:0 }, { id: Math.random(), key: 'coop', type: 'Livestock_Poultry', category: 'Livestock', animals: { type: 'hen', count: 10 }, feed:50, water:50, straw:0, manure:0, output:0 }];
+                    newInv = EQUIPMENT.map(e => ({ uid: Math.random().toString(36), itemId: e.id, fuel:100, hours:0, condition:100, lastService:0, ownership:'owned' }));
+                    newFacs = [
+                        { id: Math.random(), key: 'barn', type: 'Livestock_Dairy', category: 'Livestock', animals: { type: 'cow', count: 2 }, feed:50, water:50, straw:50, manure:0, output:0 },
+                        { id: Math.random(), key: 'feedlot', type: 'Livestock_Beef', category: 'Livestock', animals: { type: 'steer', count: 5 }, feed:50, water:50, straw:50, manure:0, output:0 },
+                        { id: Math.random(), key: 'hog', type: 'Livestock_Hog', category: 'Livestock', animals: { type: 'pig', count: 5 }, feed:50, water:50, straw:50, manure:0, output:0 },
+                        { id: Math.random(), key: 'coop', type: 'Livestock_Poultry', category: 'Livestock', animals: { type: 'hen', count: 20 }, feed:50, water:50, straw:0, manure:0, output:0 },
+                        { id: Math.random(), key: 'pasture', type: 'Livestock_Sheep', category: 'Livestock', animals: { type: 'sheep', count: 5 }, feed:50, water:50, straw:0, manure:0, output:0 }
+                    ];
                 } else if (type === 'start') {
-                    newInv = ['cih_mag','cih_rip','jd_plnt','jd_x9','hd_corn'].map(id => ({ uid: Math.random().toString(36), itemId: id, fuel:100, hours:0, condition:100, lastService:0 }));
+                    newInv = ['cih_mag','cih_rip','jd_plnt','jd_x9','hd_corn'].map(id => ({ uid: Math.random().toString(36), itemId: id, fuel:100, hours:0, condition:100, lastService:0, ownership:'owned' }));
                 } else if (type === 'mega') {
-                    newInv = ['cih_mag','cih_rip','jd_plnt','tank'].map(id => ({ uid: Math.random().toString(36), itemId: id, fuel:100, hours:0, condition:100, lastService:0 }));
+                    newInv = ['cih_mag','cih_rip','jd_plnt','tank'].map(id => ({ uid: Math.random().toString(36), itemId: id, fuel:100, hours:0, condition:100, lastService:0, ownership:'owned' }));
                     newFacs = [{ id: Math.random(), key: 'coop', type: 'Livestock_Poultry', category: 'Livestock', animals: { type: 'hen', count: 10 }, feed:50, water:50, straw:0, manure:0, output:0 }];
                 }
 
@@ -373,123 +750,1168 @@
                     money: type === 'ultimate' ? 5000 : prev.money - cost, 
                     inventory: [...prev.inventory, ...newInv], 
                     facilities: [...prev.facilities, ...newFacs],
+                    fields: type === 'ultimate' ? prev.fields.map(f => f.id <= 10 ? {...f, owned:true, leased:false} : f) : prev.fields,
+                    consumables: type === 'ultimate' ? { ...prev.consumables, tmr: 1000, corn: 2000, wheat: 500, hay: 500, straw: 1000 } : prev.consumables,
                     transactions: [{id:Date.now(), desc:`Bundle: ${type}`, amount:-cost, date:Date.now()}, ...prev.transactions]
                 }));
                 alert("Bundle Purchased!");
             };
-
             const buyField = (fid) => {
-                const f = gameState.fields.find(f => f.id === fid);
-                const cost = f.acres * LAND_PRICE_PER_ACRE;
-                if(gameState.money < cost) return alert("No Funds");
-                setGameState(prev => ({...prev, money: prev.money - cost, transactions: [{id:Date.now(), desc:`Land #${fid}`, amount:-cost, date:Date.now()}, ...prev.transactions], fields: prev.fields.map(fd => fd.id === fid ? {...fd, owned: true} : fd)}));
+                 const f = gameState.fields.find(f=>f.id===fid); const cost=f.acres*16500; if(gameState.money<cost) return alert("Funds");
+                 setGameState(prev=>({
+                     ...prev, 
+                     money:prev.money-cost, 
+                     fields:prev.fields.map(x=>x.id===fid?{...x, owned:true}:x),
+                     transactions: [{id:Date.now(), desc: `Property #${fid} (${f.acres}ac)`, amount: -cost, date:Date.now()}, ...prev.transactions]
+                 }));
             };
-
-            const hire = (role) => {
-                const name = EMP_NAMES[Math.floor(Math.random()*EMP_NAMES.length)];
-                setGameState(p => ({...p, employees: [...p.employees, {id:Date.now(), name, role, hourlyRate: EMP_ROLES[role].wage, status:'Idle'}]}));
+            const hire = (r) => {
+                const names = ROLE_NAMES[r];
+                const name = names[Math.floor(Math.random()*names.length)];
+                setGameState(p=>({...p, employees:[...p.employees, {id:Date.now(), name, role:r, hourlyRate:20, status:'Idle'}]}));
             };
-
-            const fireEmployee = (id) => setGameState(p => ({ ...p, employees: p.employees.filter(e => e.id !== id) }));
-
-            const loanOp = (amt) => {
-                 if(amt < 0 && gameState.money < Math.abs(amt)) return alert("No Funds");
-                 setGameState(p => ({...p, money: p.money + amt, loan: p.loan + amt, transactions: [{id:Date.now(), desc: amt>0?'Loan':'Repay', amount:amt, date:Date.now()}, ...p.transactions]}));
-            };
-
+            const fireEmployee = (id) => setGameState(p=>({...p, employees:p.employees.filter(e=>e.id!==id)}));
+            const loanOp = (a) => setGameState(p=>({
+                ...p, 
+                money:p.money+a, 
+                loan:p.loan+a,
+                transactions: [{id:Date.now(), desc: a > 0 ? `Loan Taken` : `Loan Repayment`, amount: a, date:Date.now()}, ...p.transactions]
+            }));
             const buyAnim = (fid, k, n) => {
-                const cost = ANIMALS[k].cost * n;
-                if(gameState.money < cost) return alert("No Funds");
-                setGameState(prev => ({ ...prev, money: prev.money - cost, transactions: [{id:Date.now(), desc: `Bought ${n} ${ANIMALS[k].name}`, amount: -cost, date: Date.now()}, ...prev.transactions].slice(0,50), deliveries: [...prev.deliveries, { type: 'anim', id: k, name: `Live ${ANIMALS[k].name}s`, qty: n, at: Date.now() + 3*DAY_MS, targetId: fid }] }));
-                setModal(null);
-                alert("Animals Ordered.");
+                 const cost = ANIMALS[k].cost*n; if(gameState.money<cost) return alert("Funds");
+                 setGameState(p=>({
+                     ...p, 
+                     money:p.money-cost, 
+                     deliveries:[...p.deliveries, {type:'anim', targetId:fid, id:k, name:ANIMALS[k].name, qty:n, at:Date.now()+5000}],
+                     transactions: [{id:Date.now(), desc: `Bought ${n} ${ANIMALS[k].name}`, amount: -cost, date:Date.now()}, ...p.transactions]
+                 })); setModal(null);
+            };
+            const hardReset = () => { localStorage.removeItem(SAVE_KEY); window.location.reload(); };
+            
+            const lease = (item) => { 
+                const cost = item.cost * EQUIP_LEASE_RATE;
+                if(gameState.money < cost) return alert("Funds");
+                setGameState(prev => ({
+                    ...prev,
+                    money: prev.money - cost,
+                    deliveries: [...prev.deliveries, {
+                        id: item.id,
+                        name: item.name,
+                        type: 'eq',
+                        qty: 1,
+                        at: Date.now() + 5000,
+                        mode: 'lease'
+                    }],
+                    transactions: [{id:Date.now(), desc:`Lease Down Pmt: ${item.name}`, amount:-cost, date:Date.now()}, ...prev.transactions]
+                }));
+            };
+            
+            const leaseField = (fid) => { 
+                const f = gameState.fields.find(x => x.id === fid);
+                const cost = (f.acres * LAND_PRICE_PER_ACRE) * LAND_LEASE_RATE;
+                if(gameState.money < cost) return alert("Funds");
+                setGameState(prev => ({
+                    ...prev,
+                    money: prev.money - cost,
+                    fields: prev.fields.map(x => x.id === fid ? { ...x, owned: true, leased: true } : x),
+                    transactions: [{id:Date.now(), desc:`Lease Field #${fid}`, amount:-cost, date:Date.now()}, ...prev.transactions]
+                }));
+            };
+            
+            const importSave = () => {
+                const data = prompt("Paste save string here:");
+                if(data) {
+                    try {
+                        localStorage.setItem(SAVE_KEY, data);
+                        window.location.reload();
+                    } catch(e) { alert("Invalid Save"); }
+                }
+            };
+            
+            const startChore = () => {
+                if(!modal.selectedTR || !modal.selectedEmp) return alert("Missing Equipment/Staff");
+                startJob({
+                    type: 'chore', 
+                    tid: modal.fid, 
+                    task: modal.job, 
+                    tr: modal.selectedTR, 
+                    imp: modal.selectedImp, 
+                    emp: modal.selectedEmp 
+                });
             };
 
-            const exportSave = () => { navigator.clipboard.writeText(JSON.stringify(gameState)); alert("Save data copied!"); };
-            const importSave = () => { const d = prompt("Paste save data:"); if(d) { try { JSON.parse(d); localStorage.setItem('jersey_roots_v22_6_STABLE', d); window.location.reload(); } catch(e) { alert("Invalid Data"); } } };
+            const startMiscJob = () => {
+                const job = MISC_JOBS.find(j => j.id === modal.jobId);
+                if(job.req && !modal.selectedTR) return alert("Missing Equipment");
+                if(!modal.selectedEmp) return alert("Missing Staff");
+                startJob({
+                    type: 'misc', 
+                    tid: modal.jobId, 
+                    tr: modal.selectedTR, 
+                    emp: modal.selectedEmp,
+                    dur: job.dur
+                });
+            };
+
+            const startMaintenance = () => {
+                if(!modal.selectedEmp) return alert("Select Mechanic");
+                startJob({
+                    type: 'maintenance',
+                    tid: modal.tid,
+                    step: 'Service',
+                    tr: modal.tid, 
+                    emp: modal.selectedEmp
+                });
+            };
+
+            const startFieldJob = (fid, cropKey) => {
+                const f = gameState.fields.find(fd=>fd.id===fid);
+                let step = f.state;
+                if(step==='Fallow'||step==='Stubble') step='Primary Tillage';
+                if(step==='Ready') step='Harvest';
+                
+                if(step==='Harvest') {
+                    if(!modal.selectedTR || !modal.selectedImp || !modal.selectedEmp || !modal.selectedTR2 || !modal.selectedImp2 || !modal.selectedEmp2) return alert("Missing Equipment");
+                    startJob({type:'field', tid:fid, step, tr:modal.selectedTR, imp:modal.selectedImp, emp:modal.selectedEmp, tr2:modal.selectedTR2, imp2:modal.selectedImp2, emp2:modal.selectedEmp2});
+                } else {
+                    startJob({type:'field', tid:fid, step, tr:modal.selectedTR, imp:modal.selectedImp, emp:modal.selectedEmp});
+                }
+            };
+
+            const getJobRequirements = (type, step, cropKey) => {
+                let req = { trCat:['Tractor'], impCat:[], role:['Owner'], needsTransport: step==='Harvest' };
+                if(type==='field') {
+                    req.role.push('Hand');
+                    if(step.includes('Primary Tillage')) req.impCat = ['Plow', 'Ripper', 'De-Stoner', 'Digger_Peanut'];
+                    else if(step.includes('Secondary Tillage')) req.impCat = ['Cultivator'];
+                    else if(step === 'Lime' || step === 'Fertilizer') req.impCat = ['Spreader'];
+                    else if(step === 'Plant') {
+                        if(cropKey === 'Corn' || cropKey === 'Soy' || cropKey === 'Cotton' || cropKey === 'Sunflower' || cropKey === 'Sorghum' || cropKey === 'Peanuts' || cropKey === 'Beets') req.impCat = ['Planter'];
+                        else if(cropKey === 'Potato') req.impCat = ['Planter_Potato'];
+                        else req.impCat = ['Drill']; 
+                    }
+                    else if(step === 'Spray') { req.trCat = ['Sprayer']; req.impCat = []; }
+                    else if(step === 'Harvest') {
+                        if(['Cotton'].includes(cropKey)) { req.trCat = ['Harvester_Cotton']; req.impCat = []; }
+                        else if(['Potato'].includes(cropKey)) { req.trCat = ['Harvester_Potato']; req.impCat = []; }
+                        else if(['Beets'].includes(cropKey)) { req.trCat = ['Harvester_Beet']; req.impCat = []; }
+                        else if(['Peanuts'].includes(cropKey)) { req.trCat = ['Harvester_Peanut']; req.impCat = []; }
+                        else {
+                            req.trCat = ['Combine'];
+                            if(cropKey === 'Corn') req.impCat = ['Header_Corn'];
+                            else if(cropKey === 'Sunflower') req.impCat = ['Header_Sunflower'];
+                            else req.impCat = ['Header_Grain'];
+                        }
+                    }
+                    else if(step === 'Cut') { req.trCat = ['Tractor', 'Mower']; req.impCat = ['Mower']; } 
+                    else if(step === 'Tedder') { req.impCat = ['Tedder']; } 
+                    else if(step === 'Bale') { req.impCat = ['Baler']; }
+                } else if(type === 'chore') {
+                    req.role.push('Herd'); // Add Herdsman
+                    req.trCat = ['Tractor']; 
+                    if(step === 'feed') req.impCat = ['Mixer'];
+                    else if(step === 'water') req.impCat = ['Tanker'];
+                    else if(step === 'straw') req.impCat = ['Processor'];
+                } else if(type === 'maintenance') {
+                    req.role.push('Mech'); // Add Mechanic
+                } else if(type === 'misc') {
+                    const job = MISC_JOBS.find(j => j.id === step);
+                    if(job) {
+                        req.role.push(job.role); // Add specific role
+                        if(job.req) req.trCat = [job.req];
+                    }
+                } else if(type === 'snow') {
+                    req.role.push('Hand');
+                    req.trCat = ['Snow Plow'];
+                }
+                return req;
+            };
+
+            // ---------------- RENDERERS ----------------
 
             const renderDash = () => (
                 <div className={`space-y-6 ${gameState.snowLevel>0?'snow-bg':''} ${gameState.weather==='Rain'?'rain-bg':''}`}>
-                    <div className="flex justify-between items-end border-b border-white/10 pb-4">
-                        <div>
-                            <h2 className="text-3xl font-black text-white flex items-center gap-2"><Icons.Clock className="w-8 h-8 text-blue-500" /> {new Date(now).toLocaleTimeString()}</h2>
-                            <div className="text-slate-400 font-mono text-lg flex items-center gap-2">{new Date(now).toLocaleDateString()} <span className="text-xs bg-slate-800 px-2 py-1 rounded text-blue-300">NJ: {gameState.weather}</span></div>
+                    <div className="flex justify-between items-center glass-panel p-6 bg-gradient-to-r from-blue-900/40 to-slate-900/40 border-b border-white/5">
+                        <div className="flex gap-6 items-center">
+                            <div className="p-3 bg-blue-500/20 rounded-xl">
+                                <Icons.Clock className="w-8 h-8 text-blue-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">{new Date(now).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</h2>
+                                <div className="text-slate-400 font-mono text-sm flex items-center gap-2">
+                                    {new Date(now).toLocaleDateString()} 
+                                    <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-blue-300 border border-blue-900">NJ: {gameState.weather}</span>
+                                </div>
+                            </div>
                         </div>
                         <div className="text-right">
-                             <div className="text-xs text-red-400">LOAN: ${Math.floor(gameState.loan).toLocaleString()}</div>
-                             <button onClick={exportSave} className="text-[10px] text-blue-500 underline">Cloud Save Code</button>
+                             <div className="text-2xl font-bold text-emerald-400">${Math.floor(gameState.money).toLocaleString()}</div>
+                             {gameState.loan > 0 && <div className="text-xs text-red-400 font-mono">LOAN: ${Math.floor(gameState.loan).toLocaleString()}</div>}
                         </div>
                     </div>
+
                     {gameState.snowLevel > 0 && (
-                        <div className="bg-blue-900/80 p-4 rounded flex justify-between items-center border border-blue-500 shadow-lg">
-                            <div className="text-blue-200"><div className="font-bold flex items-center gap-2"><Icons.Snow className="w-5 h-5"/> Snow Accumulation: {Math.floor(gameState.snowLevel)}%</div><div className="text-xs">Operations slowed.</div></div>
-                            <button onClick={()=>setModal({type:'chore', job:'snow'})} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold border border-blue-400">Plow Snow</button>
+                        <div className="bg-blue-900/80 p-4 rounded-xl flex justify-between items-center border border-blue-500 shadow-lg shadow-blue-900/20">
+                            <div className="text-blue-100"><div className="font-bold flex items-center gap-2"><Icons.Snow className="w-5 h-5"/> Snow Accumulation: {Math.floor(gameState.snowLevel)}%</div><div className="text-xs opacity-75">Operations slowed significantly.</div></div>
+                            <button onClick={()=>setModal({type:'chore', job:'snow'})} className="bg-blue-500 hover:bg-blue-400 text-white px-4 py-2 rounded-lg font-bold shadow-lg transition-all">Plow Snow</button>
                         </div>
                     )}
+
+                    <div className="flex gap-4 mb-4">
+                         <div className="glass-panel p-4 flex-1 border border-emerald-500/30 bg-emerald-900/10">
+                             <div className="text-xs text-emerald-400 font-bold uppercase">Active Deliveries</div>
+                             <div className="space-y-1 mt-2">
+                                 {(gameState.deliveries||[]).filter(d=>d.at > now).length === 0 && <div className="text-xs text-slate-500 italic">No pending orders</div>}
+                                 {(gameState.deliveries||[]).filter(d=>d.at > now).map((d,i) => (
+                                     <div key={i} className="flex justify-between text-xs text-white border-b border-white/5 pb-1">
+                                         <span>{d.name} {d.qty > 1 ? `(x${d.qty})` : ''}</span>
+                                         <span className="font-mono text-emerald-300">{formatTime(d.at - now)}</span>
+                                     </div>
+                                 ))}
+                             </div>
+                         </div>
+                    </div>
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {(gameState.fields||[]).filter(f => f.owned).map(f => {
                             const job = (gameState.activeJobs||[]).find(j=>j.tid===f.id);
                             const pct = job ? Math.min(100, ((now - job.start)/job.dur)*100) : 0;
                             let timeStr = ""; if(job) { const el = now - job.start; const rem = Math.max(0, job.dur - el); timeStr = formatTime(rem); }
-                            return <div key={f.id} onClick={()=>!job && setModal({type:'field', id:f.id})} className="glass-panel p-4 rounded cursor-pointer hover:bg-slate-800"><div className="font-bold text-white">#{f.id} <span className="text-xs font-normal text-slate-400">{f.state}</span></div><div className="text-xs text-slate-500">{f.acres}ac</div>{job ? <div className="mt-2"><div className="flex justify-between text-[10px] text-amber-500 font-bold mb-1"><span>{job.step}</span><span className="font-mono">{timeStr}</span></div><div className="w-full h-1 bg-slate-700 rounded"><div className="h-full bg-amber-500" style={{width:`${pct}%`}}></div></div></div> : <div className="text-[10px] text-slate-500">Idle</div>}</div>
+                            
+                            const cropColor = f.cropPlan && CROPS[f.cropPlan.key] ? CROPS[f.cropPlan.key].color : 'bg-slate-700';
+                            
+                            return (
+                                <div key={f.id} onClick={()=>!job && setModal({type:'field', id:f.id, state: f.state, crop: f.cropPlan ? f.cropPlan.key : null})} 
+                                     className="glass-panel p-5 cursor-pointer hover:-translate-y-1 transition-transform group relative overflow-hidden">
+                                    <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-10 group-hover:opacity-20 transition-opacity ${cropColor}`}></div>
+                                    
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div className="font-bold text-white text-lg">#{f.id}</div>
+                                        <div className="text-xs font-mono text-slate-500 bg-slate-900/50 px-2 py-1 rounded">{f.acres}ac</div>
+                                    </div>
+                                    
+                                    <div className="text-sm text-slate-300 font-medium mb-1">{f.cropPlan ? CROPS[f.cropPlan.key].name : 'Empty'}</div>
+                                    <div className="text-xs text-slate-500 uppercase tracking-wide mb-3">{f.state}</div>
+                                    
+                                    {f.state === 'Growing' && (
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                            <div className="text-[10px] text-emerald-400 font-bold uppercase">
+                                                Maturing (Harvest: {MONTH_NAMES[CROPS[f.cropPlan.key].harvestMonths[0]]})
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {job ? (
+                                        <div className="mt-2">
+                                            <div className="flex justify-between text-[10px] text-amber-400 font-bold mb-1">
+                                                <span className="uppercase">{job.step}</span>
+                                                <span className="font-mono">{timeStr}</span>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                                <div className="h-full bg-gradient-to-r from-amber-500 to-orange-400 progress-bar-striped" style={{width:`${pct}%`}}></div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        f.state !== 'Growing' && <div className="text-[10px] text-slate-600 font-mono mt-4">IDLE - TAP TO ASSIGN</div>
+                                    )}
+                                </div>
+                            )
                         })}
                     </div>
-                    {/* Re-added pending deliveries/construction renderers if needed, keeping it minimal to prevent length crash */}
                 </div>
             );
 
-            // Renderers for Store, Garage, Bank, HR, RealEstate are standard, ensuring safe array access with (array || []).map
+            const renderMarket = () => {
+                const currentMonth = new Date(now).getMonth();
+                return <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-white flex gap-2"><Icons.Dollar className="text-emerald-400"/> Commodity Market</h2>
+                    
+                    <div className="glass-panel p-6">
+                        <h3 className="text-lg font-bold text-white mb-4">Spot Market Prices ({MONTH_NAMES[currentMonth]})</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {Object.keys(CROPS).map(c => {
+                                const base = CROPS[c].price;
+                                const curr = getSeasonalPrice(c, base, currentMonth);
+                                const diff = curr - base;
+                                return (
+                                    <div key={c} className="bg-slate-800 p-3 rounded-lg border border-white/5">
+                                        <div className="text-slate-400 text-xs uppercase">{c}</div>
+                                        <div className="text-xl font-mono font-bold text-white">${curr.toFixed(2)}</div>
+                                        <div className={`text-xs ${diff >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                            {diff >= 0 ? '▲' : '▼'} {Math.abs((diff/base)*100).toFixed(1)}% vs Avg
+                                        </div>
+                                        <button onClick={()=>setModal({type:'sell_spot', crop:c, price:curr})} className="w-full mt-2 bg-blue-600 text-[10px] py-1 rounded text-white font-bold">SELL</button>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="glass-panel p-6">
+                            <h3 className="text-lg font-bold text-white mb-4">Available Contracts</h3>
+                            <div className="space-y-3">
+                                {(gameState.contracts||[]).map(c => (
+                                    <div key={c.id} className="p-4 bg-slate-800/50 rounded-xl border border-slate-700 flex justify-between items-center">
+                                        <div>
+                                            <div className="text-emerald-400 font-bold">{c.buyer}</div>
+                                            <div className="text-sm text-white">{c.qty.toLocaleString()} bu {c.crop} @ ${c.price.toFixed(2)}</div>
+                                            <div className="text-xs text-slate-400">Deadline: {formatTime(c.deadline - now)}</div>
+                                        </div>
+                                        <button onClick={()=>signContract(c)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold">Sign</button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="glass-panel p-6 border border-blue-500/30">
+                            <h3 className="text-lg font-bold text-white mb-4">Active Contracts</h3>
+                            <div className="space-y-3">
+                                {(gameState.activeContracts||[]).length === 0 && <div className="text-slate-500 italic">No active contracts.</div>}
+                                {(gameState.activeContracts||[]).map(c => {
+                                    const pct = (c.delivered / c.qty) * 100;
+                                    return (
+                                        <div key={c.id} className="p-4 bg-blue-900/20 rounded-xl border border-blue-500/30">
+                                            <div className="flex justify-between mb-2">
+                                                <span className="text-white font-bold">{c.buyer} ({c.crop})</span>
+                                                <span className="text-red-300 text-xs font-mono">{formatTime(c.deadline - now)}</span>
+                                            </div>
+                                            <div className="w-full h-2 bg-slate-800 rounded-full mb-2">
+                                                <div className="h-full bg-blue-500" style={{width:`${pct}%`}}></div>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <div className="text-xs text-blue-200">{c.delivered.toLocaleString()} / {c.qty.toLocaleString()} bu</div>
+                                                <button onClick={()=>deliverContract(c.id, 10000)} className="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-bold">Deliver 10k</button>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            };
+
+            const renderJobs = () => (
+                <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><Icons.List className="text-purple-400"/> Farm Schedule</h2>
+                    <div className="grid grid-cols-1 gap-3">
+                        {(gameState.miscTasks||[]).map(t => {
+                            const job = (gameState.activeJobs||[]).find(j => j.tid === t.id);
+                            const isDone = t.status === 'Done';
+                            const isSkipped = t.status === 'Skipped';
+                            
+                            let timeStr = ""; 
+                            let pct = 0;
+                            if(job) { 
+                                const elapsed = now - job.start;
+                                const remaining = Math.max(0, job.dur - elapsed);
+                                pct = Math.min(100, (elapsed / job.dur) * 100);
+                                timeStr = formatTime(remaining); 
+                            }
+
+                            return (
+                                <div key={t.id} className="glass-panel p-4 flex justify-between items-center border-l-4 border-l-purple-500">
+                                    <div className="flex-1">
+                                        <div className="text-white font-bold text-lg">{t.name}</div>
+                                        <div className="text-xs text-slate-400 flex gap-2 mt-1">
+                                            <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">{t.freq}</span>
+                                            <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">Req: {t.req || 'None'}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 max-w-xs text-right">
+                                        {job ? (
+                                            <div className="w-full">
+                                                <div className="flex justify-between text-[10px] text-amber-400 font-bold mb-1">
+                                                    <span>IN PROGRESS</span>
+                                                    <span className="font-mono">{timeStr}</span>
+                                                </div>
+                                                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-300 progress-bar-striped" style={{width:`${pct}%`}}></div>
+                                                </div>
+                                            </div>
+                                        ) : isDone ? (
+                                            <div className="text-emerald-400 font-bold flex items-center justify-end gap-2 bg-emerald-900/20 px-3 py-1 rounded-lg border border-emerald-900/50">
+                                                COMPLETED <Icons.Clock className="w-4 h-4"/>
+                                            </div>
+                                        ) : isSkipped ? (
+                                            <div className="text-slate-500 font-bold italic">Wrong Season</div>
+                                        ) : (
+                                            <button onClick={()=>setModal({type:'misc', jobId: t.id})} className="btn-modern bg-blue-600/80 text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-blue-500">Start Task</button>
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            );
+
             const renderStore = () => (
-                <div className="space-y-4">
-                    <div className="flex gap-2"><button onClick={()=>setStoreTab('eq')} className="btn-blue px-4 py-2 rounded text-white text-xs">Equipment</button><button onClick={()=>setStoreTab('sup')} className="btn-blue px-4 py-2 rounded text-white text-xs">Supplies</button><button onClick={()=>setStoreTab('bundle')} className="btn-blue px-4 py-2 rounded text-white text-xs">Bundles</button></div>
-                    {storeTab==='eq' && <div className="grid grid-cols-2 gap-2 h-96 overflow-y-auto">{EQUIPMENT.map(e=><div key={e.id} className="glass-panel p-2 flex justify-between items-center"><span className="text-white text-xs">{e.name}</span><button onClick={()=>buy(e,'eq')} className="text-green-400 text-xs">${e.cost.toLocaleString()}</button></div>)}</div>}
-                    {storeTab==='sup' && <div className="grid grid-cols-3 gap-2">{Object.entries(SUPPLIES).map(([k,v])=><div key={k} className="glass-panel p-2"><div className="text-white text-xs uppercase">{k}</div><button onClick={()=>buy({key:k,val:v},'sup',10)} className="text-green-400 text-xs">+10 (${v*10})</button></div>)}</div>}
-                    {storeTab==='bundle' && <div className="grid grid-cols-1 gap-4"><div className="glass-panel p-6 border border-amber-500"><h3 className="text-xl text-amber-500 font-bold">Starter Kit</h3><button onClick={()=>buyBundle('start')} className="w-full mt-2 bg-amber-700 py-2 rounded text-white">Buy $1.5M</button></div><div className="glass-panel p-6 border border-purple-500"><h3 className="text-xl text-purple-400 font-bold">Mega Bundle</h3><button onClick={()=>buyBundle('mega')} className="w-full mt-2 bg-purple-700 py-2 rounded text-white">Buy $1.8M</button></div><div className="glass-panel p-6 border border-yellow-500"><h3 className="text-xl text-yellow-400 font-bold">Ultimate Tycoon</h3><button onClick={()=>buyBundle('ultimate')} className="w-full mt-2 bg-yellow-700 py-2 rounded text-white">Liquidate & Buy</button></div></div>}
+                <div className="space-y-6">
+                    <div className="flex gap-2 p-1 bg-slate-900/50 rounded-xl w-fit border border-white/10">
+                        {['eq','sup','bundle'].map(tab => (
+                            <button key={tab} onClick={()=>setStoreTab(tab)} 
+                                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${storeTab===tab ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
+                                {tab === 'eq' ? 'Equipment' : tab === 'sup' ? 'Supplies' : 'Bundles'}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    {storeTab==='eq' && <div className="grid grid-cols-2 gap-3 h-[600px] overflow-y-auto pr-2">
+                        {EQUIPMENT.map(e=>(
+                            <div key={e.id} className="glass-panel p-4 flex justify-between items-center group">
+                                <div>
+                                    <div className="text-white font-bold text-sm group-hover:text-blue-300 transition-colors">{e.name}</div>
+                                    <div className="text-xs text-slate-500">{e.cat}</div>
+                                </div>
+                                <div className="flex flex-col gap-1 items-end">
+                                    <button onClick={()=>buy(e,'eq')} className="text-emerald-400 text-xs font-mono bg-emerald-900/20 px-3 py-1 rounded border border-emerald-900/50 hover:bg-emerald-800/30 transition-colors">
+                                        Buy ${e.cost.toLocaleString()}
+                                    </button>
+                                    <button onClick={()=>lease(e)} className="text-blue-400 text-xs font-mono bg-blue-900/20 px-3 py-1 rounded border border-blue-900/50 hover:bg-blue-800/30 transition-colors">
+                                        Lease ${(e.cost*EQUIP_LEASE_RATE).toLocaleString()}
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>}
+
+                    {storeTab==='sup' && <div className="grid grid-cols-3 gap-3">
+                        {Object.entries(SUPPLIES).map(([k,v])=>(
+                            <div key={k} className="glass-panel p-4 flex flex-col justify-between h-24 hover:bg-slate-800/50 transition-colors">
+                                <div className="text-white text-xs font-bold uppercase tracking-wider">{k.replace('seed_','')}</div>
+                                <button onClick={()=>buy({key:k,val:v},'sup',10)} className="text-emerald-400 text-xs text-left font-mono">
+                                    Buy 10 (${v*10})
+                                </button>
+                            </div>
+                        ))}
+                    </div>}
+
+                    {storeTab==='bundle' && <div className="grid grid-cols-1 gap-6">
+                        <div className="glass-panel p-8 border border-amber-500/30 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10"><Icons.Tractor className="w-32 h-32 text-amber-500"/></div>
+                            <h3 className="text-2xl text-amber-400 font-black italic">STARTER KIT</h3>
+                            <p className="text-slate-400 text-sm mb-4">Essential tractors and tools to get going.</p>
+                            <button onClick={()=>buyBundle('start')} className="mt-2 bg-amber-600 hover:bg-amber-500 py-3 px-6 rounded-lg text-white font-bold shadow-lg shadow-amber-900/20">Purchase Bundle ($1.5M)</button>
+                        </div>
+                        <div className="glass-panel p-8 border border-purple-500/30 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10"><Icons.Barn className="w-32 h-32 text-purple-500"/></div>
+                            <h3 className="text-2xl text-purple-400 font-black italic">MEGA FARMER</h3>
+                            <p className="text-slate-400 text-sm mb-4">Heavy machinery and basic livestock.</p>
+                            <button onClick={()=>buyBundle('mega')} className="mt-2 bg-purple-600 hover:bg-purple-500 py-3 px-6 rounded-lg text-white font-bold shadow-lg shadow-purple-900/20">Purchase Bundle ($1.8M)</button>
+                        </div>
+                        <div className="glass-panel p-8 border border-yellow-500/30 relative overflow-hidden bg-gradient-to-br from-yellow-900/10 to-transparent">
+                            <div className="absolute top-0 right-0 p-4 opacity-10"><Icons.Bank className="w-32 h-32 text-yellow-500"/></div>
+                            <h3 className="text-3xl text-yellow-400 font-black italic">ULTIMATE TYCOON</h3>
+                            <p className="text-yellow-200/60 text-sm mb-4">Liquidate everything. Own everything.</p>
+                            <button onClick={()=>buyBundle('ultimate')} className="w-full mt-2 bg-gradient-to-r from-yellow-600 to-amber-600 hover:from-yellow-500 hover:to-amber-500 py-4 rounded-lg text-white font-black tracking-widest shadow-xl">BECOME A TYCOON</button>
+                        </div>
+                    </div>}
                 </div>
             );
 
             const renderGarage = () => {
                 const stats = getStorageStats();
                 const items = (gameState.inventory||[]).filter(i => i.hours !== undefined);
-                return <div className="space-y-6"><div className="glass-panel p-4 rounded-xl border-l-4 border-orange-500 relative overflow-hidden mb-4"><div className="flex justify-between items-start"><div><div className="text-xs text-orange-400 uppercase font-bold flex items-center gap-2"><Icons.Fuel className="w-4 h-4"/> Farm Fuel Depot</div><div className="text-2xl text-white font-mono mt-1">{Math.floor(gameState.consumables.diesel||0).toLocaleString()} <span className="text-sm text-slate-400">/ {stats.fuelCap.toLocaleString()} gal</span></div></div><button onClick={()=>setView('store')} className="bg-orange-700 hover:bg-orange-600 text-white text-xs py-2 px-3 rounded font-bold">Buy Fuel</button></div><div className="w-full h-2 bg-slate-800 mt-2 rounded overflow-hidden"><div className="h-full bg-orange-600 fuel-flow" style={{width: `${Math.min(100, ((gameState.consumables.diesel||0)/stats.fuelCap)*100)}%`}}></div></div></div><div className="grid grid-cols-2 gap-4">{items.map(i => <div key={i.uid} className="glass-panel p-4"><div className="text-white font-bold text-sm">{getEq(i.itemId).name}</div><div className="text-xs text-slate-400">Cond: {Math.floor(i.condition)}%</div><div className="w-full h-1 bg-slate-700 mt-1"><div className={`h-full ${i.condition<20?'bg-red-500':'bg-green-500'}`} style={{width:`${i.condition}%`}}></div></div><div className="flex gap-1 mt-2"><button onClick={()=>startJob({type:'maintenance', step:'Service', tid:i.uid, tr:i.uid})} className="bg-yellow-700 text-[10px] px-2 rounded text-white">Svc</button><button onClick={()=>refillTractor(i.uid)} className="bg-blue-800 text-[10px] px-2 rounded text-white">Gas</button></div></div>)}</div></div>
+                
+                const garageConstruction = (gameState.construction||[]).filter(c => {
+                    const b = BUILDINGS[c.key];
+                    return b && (b.category === 'Storage' || b.category === 'Infrastructure');
+                });
+
+                const availableBuildings = Object.entries(BUILDINGS).filter(([k,v]) => 
+                    v.category === 'Storage' || v.category === 'Infrastructure'
+                );
+
+                return <div className="space-y-6">
+                    <div className="glass-panel p-6 rounded-2xl border-l-4 border-orange-500 relative overflow-hidden mb-6 bg-gradient-to-r from-orange-900/20 to-transparent">
+                        <div className="flex justify-between items-start relative z-10">
+                            <div>
+                                <div className="text-xs text-orange-400 uppercase font-bold flex items-center gap-2 tracking-widest"><Icons.Fuel className="w-4 h-4"/> Farm Diesel Reserve</div>
+                                <div className="text-3xl text-white font-mono mt-2 font-bold tracking-tight">{Math.floor(gameState.consumables.diesel||0).toLocaleString()} <span className="text-base text-slate-500 font-normal">/ {stats.fuelCap.toLocaleString()} gal</span></div>
+                            </div>
+                            <button onClick={()=>setModal({type:'buy_fuel'})} className="btn-modern bg-orange-600/80 hover:bg-orange-500 text-white text-xs py-3 px-5 rounded-lg font-bold">Refill Tank</button>
+                        </div>
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-800">
+                            <div className="h-full bg-orange-500 fuel-flow" style={{width: `${Math.min(100, ((gameState.consumables.diesel||0)/stats.fuelCap)*100)}%`}}></div>
+                        </div>
+                    </div>
+
+                    {garageConstruction.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                            {garageConstruction.map(c => {
+                                const timeLeft = c.endTime - now;
+                                const bldg = BUILDINGS[c.key] || {name:'Unknown', buildTime: 10000};
+                                const totalTime = bldg.buildTime;
+                                const pct = Math.max(0, Math.min(100, 100 - (timeLeft/totalTime)*100));
+                                return (
+                                    <div key={c.id} className="glass-panel p-4 border border-yellow-500/50 bg-yellow-900/10">
+                                        <div className="text-yellow-500 font-bold text-xs uppercase mb-2">🚧 Under Construction</div>
+                                        <div className="text-white font-bold">{bldg.name}</div>
+                                        <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden my-2">
+                                            <div className="h-full bg-yellow-500 progress-bar-striped" style={{width:`${pct}%`}}></div>
+                                        </div>
+                                        <div className="text-right text-xs text-yellow-200 font-mono">{formatTime(timeLeft)} left</div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
+
+                    <div className="glass-panel p-6 border-t-4 border-blue-500">
+                        <h3 className="text-lg font-bold text-white mb-4">Expand Facilities</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {availableBuildings.map(([k,v]) => (
+                                <div key={k} className="bg-slate-800/50 p-4 rounded-xl border border-white/5 flex flex-col justify-between">
+                                    <div>
+                                        <div className="text-white font-bold">{v.name}</div>
+                                        <div className="text-xs text-slate-400 mt-1">Est. Time: {formatTime(v.buildTime)}</div>
+                                        <div className="text-xs text-blue-300 mt-2">Capacity: {v.capacity.toLocaleString()}</div>
+                                    </div>
+                                    <button onClick={()=>{
+                                        if(gameState.money < v.cost) return alert("Insufficient Funds");
+                                        setGameState(p=>({
+                                            ...p, 
+                                            money:p.money-v.cost, 
+                                            construction:[...p.construction, {id:Math.random(), key:k, endTime: Date.now()+v.buildTime}],
+                                            transactions: [{id:Date.now(), desc: `Construction: ${v.name}`, amount: -v.cost, date:Date.now()}, ...p.transactions]
+                                        }));
+                                    }} className="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-lg transition-colors">
+                                        Build ${v.cost.toLocaleString()}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <h3 className="text-lg font-bold text-white mt-6 mb-2">Fleet Management</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        {items.map(i => {
+                            const maintJob = (gameState.activeJobs||[]).find(j => j.type === 'maintenance' && j.tid === i.uid);
+                            let timeStr = ""; 
+                            let pct = 0;
+                            if(maintJob) {
+                                const elapsed = now - maintJob.start;
+                                const remaining = Math.max(0, maintJob.dur - elapsed);
+                                pct = Math.min(100, (elapsed / maintJob.dur) * 100);
+                                timeStr = formatTime(remaining);
+                            }
+
+                            // SAFETY CHECK
+                            const eq = getEq(i.itemId);
+
+                            return (
+                                <div key={i.uid} className={`glass-panel p-5 relative group transition-colors overflow-hidden ${maintJob ? 'bg-red-900/20 border-red-500/30' : 'hover:bg-slate-800/40'}`}>
+                                    {maintJob && (
+                                        <div className="absolute inset-0 bg-black/60 z-20 flex flex-col items-center justify-center backdrop-blur-sm">
+                                            <div className="text-red-500 font-black text-xl tracking-widest border-2 border-red-500 px-4 py-1 rounded rotate-[-10deg] shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                                                OUT OF SERVICE
+                                            </div>
+                                            <div className="mt-4 w-3/4">
+                                                <div className="flex justify-between text-xs text-red-300 font-mono mb-1">
+                                                    <span>REPAIRING...</span>
+                                                    <span>{timeStr}</span>
+                                                </div>
+                                                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-red-500 progress-bar-striped" style={{width:`${pct}%`}}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between items-start mb-3 relative z-10">
+                                        <div>
+                                            <div className="text-white font-bold text-sm">{eq.name}</div>
+                                            <div className="text-[10px] text-slate-500 font-mono mt-1 flex gap-2">
+                                                <span>ID: {i.uid.substr(0,4)}</span>
+                                                {i.ownership === 'leased' && <span className="text-blue-400 font-bold uppercase">LEASED</span>}
+                                            </div>
+                                        </div>
+                                        <div className={`px-2 py-1 rounded text-[10px] font-bold ${i.condition < 40 ? 'bg-red-900/30 text-red-400 border border-red-900/50' : 'bg-emerald-900/30 text-emerald-400 border border-emerald-900/50'}`}>
+                                            {Math.floor(i.condition)}% COND
+                                        </div>
+                                    </div>
+                                    <div className="w-full h-1 bg-slate-700 rounded-full mb-4 relative z-10">
+                                        <div className={`h-full rounded-full ${i.condition<20?'bg-red-500':'bg-emerald-500'}`} style={{width:`${i.condition}%`}}></div>
+                                    </div>
+                                    <div className="flex gap-2 relative z-10">
+                                        <button disabled={!!maintJob} onClick={()=>setModal({type:'maintenance', step:'Service', tid:i.uid, tr:i.uid})} className="flex-1 bg-slate-700 hover:bg-yellow-600 hover:text-white text-[10px] py-2 rounded text-slate-300 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">MAINTENANCE</button>
+                                        <button disabled={!!maintJob} onClick={()=>refillTractor(i.uid)} className="flex-1 bg-slate-700 hover:bg-blue-600 hover:text-white text-[10px] py-2 rounded text-slate-300 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">REFUEL</button>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
             };
 
-            const renderBank = () => <div className="space-y-6"><div className="grid grid-cols-2 gap-4"><div className="glass-panel p-4 border-l-4 border-green-500"><div>Cash</div><div className="text-xl font-mono text-white">${Math.floor(gameState.money).toLocaleString()}</div></div><div className="glass-panel p-4 border-l-4 border-red-500"><div>Debt</div><div className="text-xl font-mono text-white">${Math.floor(gameState.loan).toLocaleString()}</div></div></div><div className="glass-panel p-4"><h3 className="text-white mb-2">Transactions</h3><div className="h-64 overflow-y-auto text-xs text-slate-300">{(gameState.transactions||[]).map(t=><div key={t.id} className="flex justify-between border-b border-white/10 py-1"><span>{t.desc}</span><span className={t.amount>0?'text-green-400':'text-red-400'}>${Math.floor(t.amount).toLocaleString()}</span></div>)}</div></div><div className="flex gap-2"><button onClick={()=>loanOp(50000)} className="bg-green-700 text-white px-4 py-2 rounded">Borrow 50k</button><button onClick={()=>loanOp(-50000)} className="bg-blue-700 text-white px-4 py-2 rounded">Pay 50k</button></div></div>;
+            const renderBank = () => (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="glass-panel p-6 border-l-4 border-emerald-500 bg-gradient-to-r from-emerald-900/10 to-transparent">
+                            <div className="text-emerald-400 text-xs font-bold uppercase mb-1">Liquid Capital</div>
+                            <div className="text-2xl font-mono text-white tracking-tight">${Math.floor(gameState.money).toLocaleString()}</div>
+                        </div>
+                        <div className="glass-panel p-6 border-l-4 border-red-500 bg-gradient-to-r from-red-900/10 to-transparent">
+                            <div className="text-red-400 text-xs font-bold uppercase mb-1">Outstanding Debt</div>
+                            <div className="text-2xl font-mono text-white tracking-tight">${Math.floor(gameState.loan).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div className="glass-panel p-6">
+                        <h3 className="text-white font-bold mb-4 flex items-center gap-2"><Icons.List className="w-4 h-4"/> Recent Transactions</h3>
+                        <div className="h-96 overflow-y-auto text-xs space-y-1 pr-2">
+                            {(gameState.transactions||[]).map(t=>(
+                                <div key={t.id} className="flex justify-between items-center py-2 px-3 hover:bg-white/5 rounded transition-colors border-b border-white/5">
+                                    <span className="text-slate-300">{t.desc}</span>
+                                    <span className={`font-mono font-bold ${t.amount>0?'text-emerald-400':'text-red-400'}`}>
+                                        {t.amount > 0 ? '+' : ''}${Math.floor(t.amount).toLocaleString()}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                        <button onClick={()=>loanOp(50000)} className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-bold shadow-lg shadow-emerald-900/20">Borrow $50k</button>
+                        <button onClick={()=>loanOp(1000000)} className="flex-1 bg-emerald-800 hover:bg-emerald-700 text-white py-3 rounded-lg font-bold shadow-lg shadow-emerald-900/20">Borrow $1M</button>
+                    </div>
+                    <div className="flex gap-3">
+                        <button onClick={()=>loanOp(-50000)} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold shadow-lg shadow-blue-900/20">Repay $50k</button>
+                        <button onClick={()=>loanOp(-1000000)} className="flex-1 bg-blue-800 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow-lg shadow-blue-900/20">Repay $1M</button>
+                    </div>
+                </div>
+            );
             
-            const renderHR = () => <div className="glass-panel p-6"><h2 className="text-2xl font-bold text-white mb-4">Staff</h2><div className="grid grid-cols-4 gap-2 mb-4">{Object.keys(EMP_ROLES).map(r => <button key={r} onClick={()=>hire(r)} className="bg-blue-600 text-white text-xs py-2 rounded">Hire {EMP_ROLES[r].name}</button>)}</div>{(gameState.employees||[]).map(e => <div key={e.id} className="text-white text-sm border-b border-white/10 py-2 flex justify-between"><span>{e.name} ({e.role})</span><span className="font-mono">${e.hourlyRate}/hr</span>{e.id!==1&&<button onClick={()=>fireEmployee(e.id)} className="text-red-500 text-xs">Fire</button>}</div>)}</div>;
+            const renderHR = () => (
+                <div className="glass-panel p-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-white">Workforce Management</h2>
+                        <div className="text-xs text-slate-400">Total Employees: {gameState.employees.length - 1}</div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-3 mb-8">
+                        {Object.keys(EMP_ROLES).map(r => (
+                            <button key={r} onClick={()=>hire(r)} className="bg-slate-800 hover:bg-blue-600 text-white text-xs py-3 rounded-lg font-bold transition-all border border-slate-700 hover:border-blue-400 group">
+                                <div className="text-slate-400 group-hover:text-blue-200 text-[10px] uppercase mb-1">Recruit</div>
+                                {EMP_ROLES[r].name}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    <div className="space-y-2">
+                        {(gameState.employees||[]).map(e => (
+                            <div key={e.id} className="flex justify-between items-center p-4 bg-slate-800/50 rounded-xl border border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-2 h-2 rounded-full ${e.status === 'Idle' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`}></div>
+                                    <div>
+                                        <div className="text-white font-bold text-sm">{e.name}</div>
+                                        <div className="text-xs text-slate-500">{e.role} • ${e.hourlyRate}/hr</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className={`text-xs font-bold px-2 py-1 rounded ${e.status==='Idle'?'bg-emerald-900/30 text-emerald-400':'bg-amber-900/30 text-amber-400'}`}>{e.status}</div>
+                                    {e.id!==1 && <button onClick={()=>fireEmployee(e.id)} className="text-red-500 text-xs hover:text-red-300 font-bold">TERMINATE</button>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
             
             const renderLive = () => {
-                const facilities = (gameState.facilities||[]).filter(f => BUILDINGS[f.key].category === 'Livestock');
-                return <div className="space-y-6"><div className="flex justify-between"><h2 className="text-2xl font-bold text-white">Livestock</h2><button onClick={()=>setModal({type:'build', tab:'live'})} className="btn-blue px-3 py-1 rounded text-white text-xs">+ Build</button></div><div className="grid grid-cols-1 md:grid-cols-3 gap-4">{facilities.map(f => {
-                    const busy = (gameState.activeJobs||[]).find(j=>j.tid == f.id);
-                    return <div key={f.id} className={`glass-panel p-4 rounded border-t-4 ${f.feed<20?'border-red-500':'border-slate-600'}`}><div className="font-bold text-white mb-2">{BUILDINGS[f.key].name}</div><div className="text-xs text-slate-400 mb-2">{f.animals ? `${f.animals.count} ${ANIMALS[f.animals.type].name}` : 'Empty'}</div>{f.animals && !busy && <div className="grid grid-cols-3 gap-1"><button onClick={()=>setModal({type:'chore', job:'feed', fid:f.id})} className="bg-green-800 text-[10px] text-white rounded">Feed</button><button onClick={()=>setModal({type:'chore', job:'water', fid:f.id})} className="bg-blue-800 text-[10px] text-white rounded">Water</button></div>}{busy && <div className="text-xs text-amber-500 animate-pulse">Working...</div>}</div>})}</div></div>
+                // SAFETY FILTER
+                const activeFacilities = (gameState.facilities||[]).filter(f => BUILDINGS[f.key] && BUILDINGS[f.key].category === 'Livestock');
+                const pendingConstruction = (gameState.construction||[]).filter(c => BUILDINGS[c.key] && BUILDINGS[c.key].category === 'Livestock');
+
+                return <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-2"><Icons.Barn className="text-orange-400"/> Livestock Operations</h2>
+                        <button onClick={()=>setModal({type:'build', tab:'live'})} className="btn-modern bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg hover:bg-blue-500">+ New Pen</button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {pendingConstruction.map(c => {
+                            const timeLeft = c.endTime - now;
+                            const totalTime = BUILDINGS[c.key].buildTime;
+                            const pct = Math.max(0, Math.min(100, 100 - (timeLeft/totalTime)*100));
+                            return (
+                                <div key={c.id} className="glass-panel p-6 rounded-xl border border-dashed border-yellow-500/50 bg-yellow-900/10">
+                                    <div className="flex justify-between mb-4">
+                                        <div className="font-bold text-yellow-500">🚧 Construction Site</div>
+                                    </div>
+                                    <div className="text-white font-bold text-lg mb-2">{BUILDINGS[c.key].name}</div>
+                                    
+                                    <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden mb-2">
+                                        <div className="h-full bg-yellow-500 progress-bar-striped" style={{width:`${pct}%`}}></div>
+                                    </div>
+                                    <div className="text-right text-xs font-mono text-yellow-200">{formatTime(timeLeft)} remaining</div>
+                                </div>
+                            )
+                        })}
+
+                        {activeFacilities.map(f => {
+                            const job = (gameState.activeJobs||[]).find(j=>j.tid == f.id);
+                            const pct = job ? Math.min(100, ((now - job.start)/job.dur)*100) : 0;
+                            let timeStr = ""; if(job) { const el = now - job.start; const rem = Math.max(0, job.dur - el); timeStr = formatTime(rem); }
+                            
+                            const needsAttention = f.animals && (f.feed < 30 || f.water < 30);
+                            const buildingDef = BUILDINGS[f.key];
+                            const feedType = buildingDef.input ? buildingDef.input.toUpperCase() : 'FEED';
+                            
+                            // CALCULATE TIME REMAINING
+                            const count = f.animals ? f.animals.count : 0;
+                            let feedTime = "N/A", waterTime = "N/A";
+                            if (count > 0) {
+                                // CHANGED: Updated decayBase to 0.00025 to match the new slower consumption rate
+                                const decayBase = 0.00025 * count;
+                                const feedSecs = f.feed / decayBase;
+                                feedTime = formatTime(feedSecs * 1000);
+                                const waterSecs = f.water / (decayBase * 1.2);
+                                waterTime = formatTime(waterSecs * 1000);
+                            }
+
+                            return <div key={f.id} className={`glass-panel p-5 rounded-xl border-t-4 transition-all ${needsAttention ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-slate-600'}`}>
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="font-bold text-white text-lg">{BUILDINGS[f.key].name}</div>
+                                    {needsAttention && <div className="text-[10px] bg-red-600 px-2 py-1 rounded text-white font-bold animate-pulse">ATTENTION</div>}
+                                </div>
+                                <div className="text-xs text-slate-400 mb-4 bg-slate-900/50 p-2 rounded inline-block">
+                                    {f.animals ? `${f.animals.count} ${ANIMALS[f.animals.type].name}` : 'Empty Pen'}
+                                </div>
+                                
+                                {f.animals && <div className="space-y-2 mb-4">
+                                    <div>
+                                        <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                                            <span>{feedType} Level</span>
+                                            <span>{Math.floor(f.feed)}% ({feedTime})</span>
+                                        </div>
+                                        <div className="w-full bg-slate-800 h-1.5 rounded-full"><div className={`h-full rounded-full transition-all duration-500 ${f.feed<30?'bg-red-500':'bg-emerald-500'}`} style={{width:`${f.feed}%`}}></div></div>
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                                            <span>Water Level</span>
+                                            <span>{Math.floor(f.water)}% ({waterTime})</span>
+                                        </div>
+                                        <div className="w-full bg-slate-800 h-1.5 rounded-full"><div className={`h-full rounded-full transition-all duration-500 ${f.water<30?'bg-red-500':'bg-blue-500'}`} style={{width:`${f.water}%`}}></div></div>
+                                    </div>
+                                </div>}
+
+                                {f.animals && !job && <div className="flex gap-2">
+                                    <button onClick={()=>setModal({type:'chore', job:'feed', fid:f.id})} className="flex-1 bg-emerald-700/80 hover:bg-emerald-600 text-[10px] text-white py-2 rounded font-bold transition-colors">FEED</button>
+                                    <button onClick={()=>setModal({type:'chore', job:'water', fid:f.id})} className="flex-1 bg-blue-700/80 hover:bg-blue-600 text-[10px] text-white py-2 rounded font-bold transition-colors">WATER</button>
+                                    <button onClick={()=>setModal({type:'chore', job:'straw', fid:f.id})} className="flex-1 bg-amber-700/80 hover:bg-amber-600 text-[10px] text-white py-2 rounded font-bold transition-colors">BEDDING</button>
+                                </div>}
+                                
+                                {job && <div className="mt-2 bg-slate-900/50 p-2 rounded">
+                                    <div className="flex justify-between text-[10px] text-amber-400 font-bold mb-1"><span className="uppercase">{job.task} IN PROGRESS</span><span className="font-mono">{timeStr}</span></div>
+                                    <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden"><div className="h-full bg-amber-500 progress-bar-striped" style={{width:`${pct}%`}}></div></div>
+                                </div>}
+                            </div>
+                        })}
+                    </div>
+                </div>
             };
             
-            const renderReal = () => <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{(gameState.fields||[]).map(f => <div key={f.id} className={`p-4 border rounded-xl ${f.owned ? 'border-green-500/30 bg-green-900/10' : 'border-white/10'}`}><div className="flex justify-between"><span className="font-bold text-white">#{f.id}</span>{f.owned && <span className="text-[10px] text-green-500 font-bold">OWNED</span>}</div><div className="text-xs text-slate-400 mt-1">{f.acres} Acres</div>{!f.owned && <button onClick={()=>buyField(f.id)} className="w-full mt-4 py-1 bg-slate-800 text-xs font-bold text-white rounded hover:bg-slate-700">Buy ${(f.acres*LAND_PRICE_PER_ACRE).toLocaleString()}</button>}</div>)}</div>;
+            const renderReal = () => (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-2"><Icons.Map className="text-emerald-400"/> Land Management</h2>
+                        <div className="text-xs text-slate-400 bg-slate-900/50 px-3 py-1 rounded-lg border border-white/5">
+                            Total Acres: {(gameState.fields||[]).filter(f=>f.owned).reduce((a,b)=>a+b.acres,0).toLocaleString()}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {(gameState.fields||[]).map(f => (
+                            <div key={f.id} className={`glass-panel p-6 relative overflow-hidden transition-all ${f.owned ? 'border-emerald-500/30 bg-emerald-900/10' : 'border-white/5 bg-slate-900/40 opacity-75 hover:opacity-100 hover:border-white/20'} ${f.leased ? 'border-blue-500/40' : ''}`}>
+                                <div className="flex justify-between items-center mb-4 relative z-10">
+                                    <span className="font-black text-white text-2xl tracking-tighter">#{f.id}</span>
+                                    {f.owned ? (
+                                        <span className="text-[10px] text-emerald-300 bg-emerald-500/20 px-2 py-1 rounded-md font-bold border border-emerald-500/30">{f.leased ? 'LEASED' : 'OWNED'}</span>
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400 bg-slate-800 px-2 py-1 rounded-md font-bold">FOR SALE</span>
+                                    )}
+                                </div>
+                                <div className="space-y-1 mb-6 relative z-10">
+                                    <div className="text-sm text-slate-300 font-mono">{f.acres} Acres</div>
+                                    <div className="text-xs text-slate-500">Soil Quality: A+</div>
+                                </div>
+                                
+                                {!f.owned && (
+                                    <div className="flex flex-col gap-2 relative z-10 group">
+                                        <button onClick={()=>buyField(f.id)} className="w-full py-2 bg-slate-800 hover:bg-emerald-600 text-white text-[10px] font-bold rounded-lg transition-all shadow-lg">
+                                            Buy ${(f.acres*LAND_PRICE_PER_ACRE).toLocaleString()}
+                                        </button>
+                                        <button onClick={()=>leaseField(f.id)} className="w-full py-2 bg-slate-800 hover:bg-blue-600 text-white text-[10px] font-bold rounded-lg transition-all shadow-lg">
+                                            Lease ${(f.acres*LAND_PRICE_PER_ACRE*LAND_LEASE_RATE).toLocaleString()}
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                <div className={`absolute -bottom-6 -right-6 w-24 h-24 rounded-full blur-2xl opacity-20 ${f.owned ? (f.leased ? 'bg-blue-500' : 'bg-emerald-500') : 'bg-slate-500'}`}></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+            
+            const renderStorage = () => {
+                const stats = getStorageStats();
+                const grainPct = Math.min(100, (stats.cropUsed / stats.grainCap) * 100);
+                const machinePct = Math.min(100, (stats.machineUsed / stats.machineCap) * 100);
+                const freeGrain = stats.grainCap - stats.cropUsed;
+                const freeMachine = stats.machineCap - stats.machineUsed;
+
+                return <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><Icons.Box className="text-orange-400"/> Inventory Management</h2>
+                    
+                    <div className="glass-panel p-6 border-l-4 border-blue-500 mb-6 bg-gradient-to-r from-blue-900/10 to-transparent">
+                        <h3 className="text-lg font-bold text-white mb-4">Capacity Overview</h3>
+                        <div className="grid grid-cols-2 gap-8">
+                            <div>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-slate-300">Grain Silos</span>
+                                    <span className={freeGrain < 1000 ? "text-red-400 font-bold" : "text-emerald-400 font-mono"}>
+                                        {freeGrain.toLocaleString()} bu Free
+                                    </span>
+                                </div>
+                                <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden border border-white/10">
+                                    <div className={`h-full ${grainPct > 90 ? 'bg-red-500' : 'bg-blue-500'} progress-bar-striped`} style={{width:`${grainPct}%`}}></div>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-1 text-right">{stats.cropUsed.toLocaleString()} / {stats.grainCap.toLocaleString()} bu</div>
+                            </div>
+                            
+                            <div>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-slate-300">Machine Sheds</span>
+                                    <span className={freeMachine < 2 ? "text-red-400 font-bold" : "text-emerald-400 font-mono"}>
+                                        {freeMachine} Slots Free
+                                    </span>
+                                </div>
+                                <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden border border-white/10">
+                                    <div className={`h-full ${machinePct > 90 ? 'bg-red-500' : 'bg-orange-500'} progress-bar-striped`} style={{width:`${machinePct}%`}}></div>
+                                </div>
+                                <div className="text-[10px] text-slate-500 mt-1 text-right">{stats.machineUsed} / {stats.machineCap} Vehicles</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="glass-panel p-6">
+                            <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Silo Storage (Harvest)</h3>
+                            <div className="space-y-3">
+                                {Object.entries(gameState.consumables).filter(([k])=>['corn','soy','wheat','canola','sunflower','oats','barley','sorghum','rice'].includes(k)).map(([k,v]) => (
+                                    <div key={k} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-white/5">
+                                        <div className="capitalize text-slate-300 font-medium">{k}</div>
+                                        <div className="font-mono text-emerald-400 font-bold">{Math.floor(v).toLocaleString()} bu</div>
+                                    </div>
+                                ))}
+                                {Object.keys(gameState.consumables).filter(k=>['corn','soy','wheat'].includes(k)).length === 0 && <div className="text-xs text-slate-500 italic">Silos are empty.</div>}
+                            </div>
+                        </div>
+
+                        <div className="glass-panel p-6">
+                            <h3 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2">Barn Supplies</h3>
+                            <div className="space-y-3">
+                                {Object.entries(gameState.consumables).filter(([k])=>['tmr','hay','straw','fert','lime','seed_corn'].includes(k) || k.startsWith('seed_')).map(([k,v]) => {
+                                    const isLow = v < 100;
+                                    return (
+                                        <div key={k} className={`flex justify-between items-center p-3 rounded-lg border transition-all ${isLow ? 'bg-red-900/20 border-red-500/30' : 'bg-slate-800/50 border-white/5'}`}>
+                                            <div className="capitalize text-slate-300 font-medium flex items-center gap-2">
+                                                {k.replace('seed_','').toUpperCase()}
+                                                {isLow && <span className="text-[8px] bg-red-500 text-white px-1 rounded">LOW</span>}
+                                            </div>
+                                            <div className={`font-mono font-bold ${isLow ? 'text-red-400' : 'text-blue-400'}`}>{Math.floor(v).toLocaleString()}</div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            };
+
+            const renderModalContent = () => {
+                if(!modal) return null;
+
+                let jobReqs = { trCat:['Tractor'], impCat:[], role:['Owner'], needsTransport: false };
+                
+                if(modal.type === 'field') {
+                    let currentStep = modal.state;
+                    if(currentStep === 'Fallow' || currentStep === 'Stubble') currentStep = 'Primary Tillage';
+                    if(currentStep === 'Ready') currentStep = 'Harvest'; 
+
+                    const cropKey = modal.selectedCrop || modal.crop;
+                    jobReqs = getJobRequirements(modal.type, currentStep, cropKey);
+                } else if (modal.type === 'chore') {
+                    jobReqs = getJobRequirements(modal.type, modal.job);
+                } else if (modal.type === 'maintenance') {
+                    jobReqs = getJobRequirements(modal.type, modal.step);
+                } else if (modal.type === 'snow') {
+                    jobReqs = getJobRequirements('snow', 'snow');
+                } else if (modal.type === 'misc') {
+                    jobReqs = getJobRequirements('misc', modal.jobId);
+                }
+
+                return (
+                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="bg-[#0f172a] border border-white/10 p-8 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+                            <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">{modal.type.replace('_',' ')}</h3>
+                                <button onClick={()=>setModal(null)} className="text-red-500 font-bold">X</button>
+                            </div>
+                            
+                            {modal.type === 'buy_fuel' && (
+                                <div className="space-y-6">
+                                    <div className="p-4 bg-slate-800 rounded-lg flex justify-between items-center">
+                                        <span className="text-slate-400">Market Price</span>
+                                        <span className="text-emerald-400 font-mono font-bold">${FUEL_PRICE}/gal</span>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-slate-500 uppercase font-bold mb-2 block">Gallons Needed</label>
+                                        <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:outline-none focus:border-blue-500 font-mono text-lg" value={fuelAmount} onChange={(e)=>setFuelAmount(e.target.value)} />
+                                    </div>
+                                    <div className="text-right text-2xl font-mono text-white font-bold border-t border-white/10 pt-4">Total: <span className="text-emerald-400">${(fuelAmount*FUEL_PRICE).toLocaleString()}</span></div>
+                                    <button onClick={buyFuel} className="w-full bg-orange-600 hover:bg-orange-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-orange-900/20 transition-all">Confirm Order</button>
+                                </div>
+                            )}
+
+                             {modal.type === 'sell_spot' && (
+                                <div className="space-y-6">
+                                    <div className="p-4 bg-slate-800 rounded-lg flex justify-between items-center">
+                                        <span className="text-slate-400">Current Price</span>
+                                        <span className="text-emerald-400 font-mono font-bold">${modal.price.toFixed(2)}/bu</span>
+                                    </div>
+                                    <p className="text-sm text-slate-400">In Silo: <span className="text-white font-bold">{(gameState.consumables[modal.crop.toLowerCase()]||0).toLocaleString()} bu</span></p>
+                                    <div>
+                                        <label className="text-xs text-slate-500 uppercase font-bold mb-2 block">Amount to Sell</label>
+                                        <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:outline-none focus:border-blue-500 font-mono text-lg" onChange={(e)=>setSellAmount(e.target.value)} />
+                                    </div>
+                                    <button onClick={()=>sellSpot(modal.crop)} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all">Confirm Sale</button>
+                                </div>
+                            )}
+
+                            {modal.type === 'field' && (
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">#{modal.id}</div>
+                                        <div>
+                                            <div className="text-xs text-slate-400 uppercase font-bold">Next Operation</div>
+                                            <div className="text-white font-bold text-lg">
+                                                {modal.state==='Fallow'||modal.state==='Stubble'?'Primary Tillage': (modal.state==='Ready'?'Harvest':modal.state)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    { (modal.state === 'Fallow' || modal.state === 'Stubble' || modal.state === 'Plant') && (
+                                        <div className="space-y-3 p-4 bg-slate-900/50 rounded-xl border border-white/5">
+                                            <div className="text-xs text-blue-400 font-bold uppercase">1. Select Crop Plan</div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {Object.keys(CROPS).map(k => (
+                                                    <button key={k} onClick={()=>setModal(prev => ({...prev, selectedCrop: k}))} className={`p-3 rounded-lg text-left border transition-all ${modal.selectedCrop===k ? 'border-emerald-500 bg-emerald-900/20' : 'border-slate-700 bg-slate-800 hover:bg-slate-700'}`}>
+                                                        <div className="font-bold text-sm text-white">{CROPS[k].name}</div>
+                                                        <div className="text-[10px] text-slate-400 mt-1">{CROPS[k].plantMonths.map(m=>MONTH_NAMES[m]).join(', ')}</div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                        <div className="space-y-4">
+                                            <div className="text-xs text-blue-400 font-bold uppercase border-b border-white/10 pb-2">{modal.state==='Ready'?'Harvest Team':`${modal.state==='Fallow'||modal.state==='Stubble'?'Tillage':modal.state} Team`}</div>
+                                            <RenderSelect label="Vehicle" categories={jobReqs.trCat} selected={modal.selectedTR} onChange={(v)=>setModal({...modal, selectedTR:v})} inventory={gameState.inventory} getEq={getEq} isBusy={isBusy} />
+                                            {jobReqs.impCat.length > 0 && (
+                                                <RenderSelect label="Implement" categories={jobReqs.impCat} selected={modal.selectedImp} onChange={(v)=>setModal({...modal, selectedImp:v})} inventory={gameState.inventory} getEq={getEq} isBusy={isBusy} />
+                                            )}
+                                            <div>
+                                                <label className="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Operator ({jobReqs.role.join('/')})</label>
+                                                <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg text-sm" onChange={(e)=>setModal({...modal, selectedEmp: parseInt(e.target.value)})}>
+                                                    <option value="">-- Select --</option>
+                                                    {gameState.employees.filter(e => jobReqs.role.includes(e.role) && e.status === 'Idle').map(e => (
+                                                        <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {jobReqs.needsTransport && (
+                                            <div className="space-y-4 border-l border-white/5 pl-6">
+                                                <div className="text-xs text-orange-400 font-bold uppercase border-b border-white/10 pb-2">Transport Team</div>
+                                                <RenderSelect label="Transport Vehicle" categories={['Tractor']} selected={modal.selectedTR2} onChange={(v)=>setModal({...modal, selectedTR2:v})} inventory={gameState.inventory} getEq={getEq} isBusy={isBusy} />
+                                                <RenderSelect label="Grain Trailer" categories={['Trailer']} selected={modal.selectedImp2} onChange={(v)=>setModal({...modal, selectedImp2:v})} inventory={gameState.inventory} getEq={getEq} isBusy={isBusy} />
+                                                <div>
+                                                    <label className="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Truck Driver</label>
+                                                    <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg text-sm" onChange={(e)=>setModal({...modal, selectedEmp2: parseInt(e.target.value)})}>
+                                                        <option value="">-- Select Driver --</option>
+                                                        {gameState.employees.filter(e => jobReqs.role.includes(e.role) && e.status === 'Idle' && e.id !== modal.selectedEmp).map(e => (
+                                                            <option key={e.id} value={e.id}>{e.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    <button onClick={()=>startFieldJob(modal.id, modal.selectedCrop)} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all mt-4">
+                                        Dispatch Team(s)
+                                    </button>
+                                </div>
+                            )}
+
+                            {modal.type === 'chore' && (
+                                <div className="space-y-6">
+                                    <div className="p-4 bg-amber-900/20 border border-amber-500/30 rounded-xl mb-4">
+                                        <div className="text-amber-500 text-xs font-bold uppercase">Task Assignment</div>
+                                        <div className="text-white text-xl font-bold">{modal.job} Livestock</div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <RenderSelect label="Tractor" categories={['Tractor']} selected={modal.selectedTR} onChange={(v)=>setModal({...modal, selectedTR:v})} inventory={gameState.inventory} getEq={getEq} isBusy={isBusy} />
+                                        <RenderSelect label="Implement" categories={jobReqs.impCat} selected={modal.selectedImp} onChange={(v)=>setModal({...modal, selectedImp:v})} inventory={gameState.inventory} getEq={getEq} isBusy={isBusy} />
+                                        <div>
+                                            <label className="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Herdsman ({jobReqs.role.join('/')})</label>
+                                            <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" onChange={(e)=>setModal({...modal, selectedEmp: parseInt(e.target.value)})}>
+                                                <option value="">-- Select --</option>
+                                                {gameState.employees.filter(e => jobReqs.role.includes(e.role) && e.status === 'Idle').map(e => (
+                                                    <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button onClick={startChore} className="w-full bg-amber-600 hover:bg-amber-500 text-white py-4 rounded-xl font-bold shadow-lg mt-4">Start Chore</button>
+                                </div>
+                            )}
+
+                            {modal.type === 'misc' && (
+                                <div className="space-y-6">
+                                    <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-4">
+                                        <div className="text-blue-400 text-xs font-bold uppercase">Work Order</div>
+                                        <div className="text-white text-xl font-bold">{MISC_JOBS.find(t=>t.id===modal.jobId).name}</div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {jobReqs.trCat.length > 0 && (
+                                            <RenderSelect label="Equipment" categories={jobReqs.trCat} selected={modal.selectedTR} onChange={(v)=>setModal({...modal, selectedTR:v})} inventory={gameState.inventory} getEq={getEq} isBusy={isBusy} />
+                                        )}
+                                        <div>
+                                            <label className="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Staff Assignment</label>
+                                            <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" onChange={(e)=>setModal({...modal, selectedEmp: parseInt(e.target.value)})}>
+                                                <option value="">-- Select --</option>
+                                                {gameState.employees.filter(e => jobReqs.role.includes(e.role) && e.status === 'Idle').map(e => (
+                                                    <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button onClick={startMiscJob} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg mt-4">Assign Task</button>
+                                </div>
+                            )}
+
+                            {modal.type === 'maintenance' && (
+                                <div className="space-y-6">
+                                    <div className="p-4 bg-slate-800 rounded-lg text-center">
+                                        <div className="text-slate-400 text-sm">Servicing Unit</div>
+                                        <div className="text-white font-bold text-xl">{gameState.inventory.find(i=>i.uid===modal.tid) ? getEq(gameState.inventory.find(i=>i.uid===modal.tid).itemId).name : 'Unknown'}</div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] text-slate-500 uppercase font-bold mb-1 block">Select Mechanic</label>
+                                        <select className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg" onChange={(e)=>setModal({...modal, selectedEmp: parseInt(e.target.value)})}>
+                                            <option value="">-- Select --</option>
+                                            {gameState.employees.filter(e => jobReqs.role.includes(e.role) && e.status === 'Idle').map(e => (
+                                                <option key={e.id} value={e.id}>{e.name} ({e.role})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <button onClick={startMaintenance} className="w-full bg-yellow-600 hover:bg-yellow-500 text-white py-4 rounded-xl font-bold shadow-lg">Begin Service</button>
+                                </div>
+                            )}
+                            
+                             {modal.type === 'build' && (
+                                <div className="space-y-3">
+                                    {Object.entries(BUILDINGS).filter(([k,v])=>v.category === 'Livestock').map(([k,v]) => (
+                                         <div key={k} className="flex justify-between items-center bg-slate-800 p-4 rounded-xl border border-white/5 hover:border-white/20 transition-all">
+                                            <div>
+                                                <div className="text-white font-bold">{v.name}</div>
+                                                <div className="text-xs text-slate-400">Est. Time: {formatTime(v.buildTime)}</div>
+                                            </div>
+                                            <button onClick={()=>{
+                                                if(gameState.money < v.cost) return alert("Funds!");
+                                                setGameState(p=>({
+                                                    ...p, 
+                                                    money:p.money-v.cost, 
+                                                    construction:[...p.construction, {id:Math.random(), key:k, endTime: Date.now()+v.buildTime}],
+                                                    transactions: [{id:Date.now(), desc: `Construction: ${v.name}`, amount: -v.cost, date:Date.now()}, ...p.transactions]
+                                                }));
+                                                setModal(null);
+                                            }} className="text-emerald-400 font-mono font-bold bg-emerald-900/20 px-3 py-1.5 rounded-lg border border-emerald-900/50 hover:bg-emerald-800/30">
+                                                ${v.cost.toLocaleString()}
+                                            </button>
+                                         </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )
+            };
 
             return (
-                <div className="min-h-screen pb-12 max-w-[1600px] mx-auto">
-                    <nav className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#0f172a]/90 backdrop-blur sticky top-0 z-40">
-                        <div className="flex items-center gap-2"><Icons.Tractor className="w-6 h-6 text-white"/><span className="font-black text-white text-lg">Jersey Roots</span></div>
-                        <div className="font-mono text-white text-sm bg-slate-800 px-3 py-1 rounded">${gameState.money.toLocaleString()}</div>
-                    </nav>
-                    <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)]">
-                        <div className="w-full md:w-64 bg-[#0f172a] border-r border-white/5 p-4 flex md:flex-col gap-2 overflow-x-auto">
-                            {['Dashboard', 'Livestock', 'Store', 'Garage', 'Bank', 'HR', 'Real Estate'].map(v => 
-                                <button key={v} onClick={() => setView(v.toLowerCase().replace(' ',''))} className={`px-4 py-3 rounded-xl text-left font-bold text-sm whitespace-nowrap ${view === v.toLowerCase().replace(' ','') ? 'bg-slate-800 text-white' : 'text-slate-400'}`}>{v}</button>
-                            )}
-                            <div className="mt-auto pt-4 border-t border-white/10"><button onClick={importSave} className="text-xs text-blue-400 border border-blue-900 px-4 py-2 rounded w-full">Import Save</button></div>
+                <div className="h-screen flex overflow-hidden">
+                    <div className="w-20 lg:w-64 bg-slate-900/90 backdrop-blur-xl border-r border-white/5 flex flex-col justify-between p-4 z-20">
+                        <div className="space-y-8">
+                            <div className="flex items-center gap-3 px-2">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                    <Icons.Tractor className="text-white w-6 h-6"/>
+                                </div>
+                                <span className="font-black text-xl text-white hidden lg:block tracking-tight">JERSEY<br/><span className="text-blue-400">ROOTS</span></span>
+                            </div>
+                            
+                            <nav className="space-y-2">
+                                {['Dashboard', 'Market', 'Jobs', 'Livestock', 'Store', 'Garage', 'Bank', 'HR', 'Real Estate', 'Storage'].map(v => {
+                                    const isActive = view === v.toLowerCase().replace(' ','');
+                                    const key = v.toLowerCase().replace(' ','');
+                                    return (
+                                        <button key={v} onClick={() => setView(key)} 
+                                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
+                                            {v === 'Dashboard' && <Icons.Home className="w-5 h-5"/>}
+                                            {v === 'Jobs' && <Icons.List className="w-5 h-5"/>}
+                                            {v === 'Livestock' && <Icons.Barn className="w-5 h-5"/>}
+                                            {v === 'Store' && <Icons.Box className="w-5 h-5"/>}
+                                            {v === 'Garage' && <Icons.Wrench className="w-5 h-5"/>}
+                                            {v === 'Bank' && <Icons.Bank className="w-5 h-5"/>}
+                                            {v === 'HR' && <Icons.Users className="w-5 h-5"/>}
+                                            {v === 'Real Estate' && <Icons.Map className="w-5 h-5"/>}
+                                            {v === 'Storage' && <Icons.Box className="w-5 h-5"/>}
+                                            {v === 'Market' && <Icons.Dollar className="w-5 h-5"/>}
+                                            <span className="font-bold text-sm hidden lg:block">{v}</span>
+                                        </button>
+                                    )
+                                })}
+                            </nav>
                         </div>
-                        <div className="flex-1 p-6">
+                        
+                        <div className="space-y-2 pt-4 border-t border-white/5">
+                            <button onClick={importSave} className="w-full text-xs text-blue-400 border border-blue-900/50 hover:bg-blue-900/20 py-2 rounded-lg transition-colors">Import Save</button>
+                            <button onClick={hardReset} className="w-full text-xs text-red-400 border border-red-900/50 hover:bg-red-900/20 py-2 rounded-lg transition-colors">Hard Reset</button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 lg:p-10 relative">
+                        <div className="max-w-7xl mx-auto">
                             {view === 'dashboard' && renderDash()}
+                            {view === 'market' && renderMarket()}
+                            {view === 'jobs' && renderJobs()}
                             {view === 'livestock' && renderLive()}
                             {view === 'store' && renderStore()}
                             {view === 'garage' && renderGarage()}
                             {view === 'bank' && renderBank()}
                             {view === 'hr' && renderHR()}
                             {view === 'realestate' && renderReal()}
+                            {view === 'storage' && renderStorage()}
                         </div>
                     </div>
+                    
                     {renderModalContent()}
                 </div>
             );
