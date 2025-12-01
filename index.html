@@ -571,18 +571,29 @@
                             }
                         }
 
-                        // Tax
+                        // Tax & Interest (Monthly)
                         const currentMonth = dateObj.getMonth();
                         if (currentMonth !== lastTaxMonth && lastTaxMonth !== -1) { 
+                             // Calculate Tax
                              const ownedAcres = fields.filter(f => f.owned).reduce((sum, f) => sum + f.acres, 0);
                              const taxBill = BASE_FARM_TAX + (ownedAcres * TAX_PER_ACRE);
-                             if(money >= taxBill) { money -= taxBill; transactions = [{id: ct, desc: `Property & Land Tax`, amount: -taxBill, date: ct}, ...transactions].slice(0, 50); } 
-                             else { const deficit = taxBill - money; money = 0; loan += deficit; transactions = [{id: ct, desc: `Tax Loan (Overdue)`, amount: -taxBill, date: ct}, ...transactions].slice(0, 50); }
+                             
+                             // Calculate Interest (1% Monthly)
+                             const interest = loan > 0 ? loan * 0.01 : 0;
+                             const totalMonthlyBill = taxBill + interest;
+
+                             if(money >= totalMonthlyBill) { 
+                                 money -= totalMonthlyBill; 
+                                 transactions = [{id: ct, desc: `Taxes & Interest`, amount: -totalMonthlyBill, date: ct}, ...transactions].slice(0, 50); 
+                             } else { 
+                                 const deficit = totalMonthlyBill - money; 
+                                 money = 0; 
+                                 loan += deficit; 
+                                 transactions = [{id: ct, desc: `Tax/Interest (Added to Loan)`, amount: -totalMonthlyBill, date: ct}, ...transactions].slice(0, 50); 
+                             }
                              lastTaxMonth = currentMonth;
                         }
                         if(lastTaxMonth === -1) lastTaxMonth = currentMonth;
-
-                        if(loan > 0 && Math.random() > 0.999) { loan += loan * 0.001; }
 
                         let jobs = [], finished = [], jobMoney = 0;
                         const finConst = construction.filter(c => ct >= c.endTime);
@@ -838,32 +849,44 @@
                 const cost = fuelAmount * FUEL_PRICE; if(gameState.money<cost) return alert("Funds");
                 setGameState(prev=>({ ...prev, money:prev.money-cost, deliveries:[...prev.deliveries, {id:'diesel',name:'Diesel',type:'sup',qty:parseFloat(fuelAmount),at:Date.now()+5000}], transactions: [{id:Date.now(), desc: `Refuel (${fuelAmount}gal)`, amount: -cost, date:Date.now()}, ...prev.transactions] })); setModal(null);
             };
+            
+            // --- BUNDLE LOGIC ---
             const buyBundle = (type) => {
-                let cost = 1500000; if(type==='mega') cost=1800000; if(type==='ultimate') cost=5000;
-                if(gameState.money<cost) return alert("Funds");
-                let newInv = [], newFacs = [];
                 if(type === 'ultimate') {
-                    newInv = EQUIPMENT.map(e => ({ uid: Math.random().toString(36), itemId: e.id, fuel:100, hours:0, condition:100, lastService:0, ownership:'owned' }));
-                    newFacs = [
-                        { id: Math.random(), key: 'barn', type: 'Livestock_Dairy', category: 'Livestock', animals: { type: 'cow', count: 2 }, feed:50, water:50, straw:50, manure:0, output:0 },
-                        { id: Math.random(), key: 'feedlot', type: 'Livestock_Beef', category: 'Livestock', animals: { type: 'steer', count: 5 }, feed:50, water:50, straw:50, manure:0, output:0 },
-                        { id: Math.random(), key: 'hog', type: 'Livestock_Hog', category: 'Livestock', animals: { type: 'pig', count: 5 }, feed:50, water:50, straw:50, manure:0, output:0 },
-                        { id: Math.random(), key: 'coop', type: 'Livestock_Poultry', category: 'Livestock', animals: { type: 'hen', count: 20 }, feed:50, water:50, straw:0, manure:0, output:0 },
-                        { id: Math.random(), key: 'pasture', type: 'Livestock_Sheep', category: 'Livestock', animals: { type: 'sheep', count: 5 }, feed:50, water:50, straw:0, manure:0, output:0 }
-                    ];
-                } else if (type === 'start') {
-                    newInv = ['cih_mag','cih_rip','jd_plnt','jd_x9','hd_corn'].map(id => ({ uid: Math.random().toString(36), itemId: id, fuel:100, hours:0, condition:100, lastService:0, ownership:'owned' }));
-                } else if (type === 'mega') {
-                    newInv = ['cih_mag','cih_rip','jd_plnt','tank'].map(id => ({ uid: Math.random().toString(36), itemId: id, fuel:100, hours:0, condition:100, lastService:0, ownership:'owned' }));
-                    newFacs = [{ id: Math.random(), key: 'coop', type: 'Livestock_Poultry', category: 'Livestock', animals: { type: 'hen', count: 10 }, feed:50, water:50, straw:0, manure:0, output:0 }];
+                    if(!confirm("This Starter Pack will RESET your farm. You will get 10 fields, every machine type, and $5,000 cash. Continue?")) return;
+                    
+                    // Create one of every machine type
+                    const starterFleet = [];
+                    const addedCats = new Set();
+                    EQUIPMENT.forEach(e => {
+                        if(!addedCats.has(e.cat)) {
+                            starterFleet.push({
+                                uid: Math.random().toString(36).substr(2,9), 
+                                itemId: e.id, 
+                                fuel: 100, 
+                                hours: 0, 
+                                condition: 100, 
+                                lastService: 0, 
+                                ownership: 'owned'
+                            });
+                            addedCats.add(e.cat);
+                        }
+                    });
+
+                    setGameState(prev => ({
+                        ...prev,
+                        money: 5000,
+                        inventory: starterFleet,
+                        // Set fields 1-10 to owned
+                        fields: prev.fields.map(f => f.id <= 10 ? {...f, owned:true, leased:false} : {...f, owned:false}),
+                        // Reset debt
+                        loan: 0,
+                        transactions: [{id:Date.now(), desc: 'Starter Pack Activated', amount: 0, date:Date.now()}]
+                    }));
+                    alert("Starter Pack Activated! Check your Garage and Fields.");
                 }
-                setGameState(prev => ({
-                    ...prev, money: type === 'ultimate' ? 5000 : prev.money - cost, inventory: [...prev.inventory, ...newInv], facilities: [...prev.facilities, ...newFacs],
-                    fields: type === 'ultimate' ? prev.fields.map(f => f.id <= 10 ? {...f, owned:true, leased:false} : f) : prev.fields,
-                    consumables: type === 'ultimate' ? { ...prev.consumables, tmr: 1000, corn: 2000, wheat: 500, hay: 500, straw: 1000 } : prev.consumables,
-                    transactions: [{id:Date.now(), desc:`Bundle: ${type}`, amount:-cost, date:Date.now()}, ...prev.transactions]
-                })); alert("Bundle Purchased!");
             };
+
             const buyField = (fid) => {
                  const f = gameState.fields.find(f=>f.id===fid); const cost=f.acres*16500; if(gameState.money<cost) return alert("Funds");
                  setGameState(prev=>({ ...prev, money:prev.money-cost, fields:prev.fields.map(x=>x.id===fid?{...x, owned:true}:x), transactions: [{id:Date.now(), desc: `Property #${fid} (${f.acres}ac)`, amount: -cost, date:Date.now()}, ...prev.transactions] }));
@@ -1215,6 +1238,7 @@
                     <div className="flex gap-2 bg-slate-800 p-1 rounded-lg w-fit">
                         <button onClick={()=>setStoreTab('eq')} className={`px-4 py-2 rounded text-xs font-bold ${storeTab==='eq'?'bg-blue-600 text-white':'text-slate-400'}`}>Equipment</button>
                         <button onClick={()=>setStoreTab('sup')} className={`px-4 py-2 rounded text-xs font-bold ${storeTab==='sup'?'bg-blue-600 text-white':'text-slate-400'}`}>Supplies</button>
+                        <button onClick={()=>setStoreTab('bundles')} className={`px-4 py-2 rounded text-xs font-bold ${storeTab==='bundles'?'bg-blue-600 text-white':'text-slate-400'}`}>Bundles</button>
                     </div>
                     {storeTab==='eq' && <div className="grid grid-cols-1 gap-4">
                         {EQUIPMENT.map(e => (
@@ -1238,6 +1262,15 @@
                             </div>
                         ))}
                     </div>}
+                    {storeTab==='bundles' && (
+                        <div className="space-y-4">
+                            <div className="glass-panel p-6 border-l-4 border-purple-500">
+                                <h3 className="text-xl font-black text-white">STARTER PACK</h3>
+                                <p className="text-slate-400 text-sm mb-4">Includes 1 of every machine, 10 Owned Fields, and resets cash to $5,000.</p>
+                                <button onClick={()=>buyBundle('ultimate')} className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-purple-900/20">REDEEM BUNDLE</button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
             
@@ -1261,9 +1294,15 @@
                         <div className="text-emerald-400 text-xs font-bold uppercase">Liquid Capital</div>
                         <div className="text-2xl font-mono text-white">${Math.floor(gameState.money).toLocaleString()}</div>
                     </div>
+                    {/* Standard Loan Options */}
                     <div className="flex gap-2">
                         <button onClick={()=>loanOp(50000)} className="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-bold">Borrow 50k</button>
                         <button onClick={()=>loanOp(-50000)} className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold">Repay 50k</button>
+                    </div>
+                    {/* High Value Loan Options */}
+                    <div className="flex gap-2">
+                        <button onClick={()=>loanOp(1000000)} className="flex-1 bg-emerald-800 text-white py-3 rounded-lg font-bold border border-emerald-500/30">Borrow 1M</button>
+                        <button onClick={()=>loanOp(-1000000)} className="flex-1 bg-blue-800 text-white py-3 rounded-lg font-bold border border-blue-500/30">Repay 1M</button>
                     </div>
                     
                     <div className="glass-panel p-4">
