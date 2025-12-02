@@ -667,7 +667,7 @@
                             }
                         });
 
-                        // NEW: CHECK FOR REAL-WORLD GROWTH
+                        // CHECK FOR REAL-WORLD GROWTH
                         fields = fields.map(f => {
                             if (f.state === 'Growing' && f.cropPlan) {
                                 const crop = CROPS[f.cropPlan.key];
@@ -702,14 +702,26 @@
                             // Increased production to match faster consumption
                             if(feed > 0 && water > 0) out += (def.productRate ? def.productRate*c*0.005 : 0);
                             
-                            if ((feed <= 0 || water <= 0) && c > 0) {
+                            // *** NEW GRACE PERIOD LOGIC ***
+                            let starveTimer = f.starveTimer || 0;
+
+                            if (feed > 0 && water > 0) {
+                                starveTimer = 0; // Reset
+                            } else if (starveTimer === 0) {
+                                starveTimer = ct; // Start timer
+                            }
+
+                            // Only kill if starvation has lasted longer than 1 day (86400000 ms)
+                            if (starveTimer > 0 && (ct - starveTimer) > DAY_MS && c > 0) {
                                 if(Math.random() < 0.01) {
                                     f.animals.count -= 1;
                                     transactions.unshift({id: Date.now(), desc: `Loss: ${def.name} died (Neglect)`, amount: 0, date: Date.now()});
                                 }
                             }
+                            // ******************************
+
                             if(f.animals.count <= 0) f.animals = null;
-                            return {...f, feed, water, straw, output: out};
+                            return {...f, feed, water, straw, output: out, starveTimer}; 
                         });
 
                         if(jobMoney > 0) transactions = [{id: ct, desc: 'Income', amount: jobMoney, date: ct}, ...transactions].slice(0, 50);
@@ -1647,14 +1659,19 @@
                             
                             // SAFETY: Check if animal definition exists
                             const animalName = f.animals && ANIMALS[f.animals.type] ? ANIMALS[f.animals.type].name : 'Unknown';
+                            const capacity = buildingDef.capacity;
 
                             return <div key={f.id} className={`glass-panel p-5 rounded-xl border-t-4 transition-all ${needsAttention ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'border-slate-600'}`}>
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="font-bold text-white text-lg">{buildingDef.name}</div>
                                     {needsAttention && <div className="text-[10px] bg-red-600 px-2 py-1 rounded text-white font-bold animate-pulse">ATTENTION</div>}
                                 </div>
-                                <div className="text-xs text-slate-400 mb-4 bg-slate-900/50 p-2 rounded inline-block">
-                                    {f.animals ? `${f.animals.count} ${animalName}` : 'Empty Pen'}
+                                
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="text-xs text-slate-400 bg-slate-900/50 p-2 rounded inline-block">
+                                        {f.animals ? `${f.animals.count}/${capacity} ${animalName}` : `Empty (Cap: ${capacity})`}
+                                    </div>
+                                    <button onClick={()=>setModal({type:'buy_anim', fid:f.id, bKey:f.key})} className="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded font-bold shadow">+ Buy Animals</button>
                                 </div>
                                 
                                 {f.animals && <div className="space-y-2 mb-4">
@@ -1862,6 +1879,29 @@
                                     <button onClick={()=>sellSpot(modal.crop)} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all">Confirm Sale</button>
                                 </div>
                             )}
+
+                            {modal.type === 'buy_anim' && (() => {
+                                const fac = gameState.facilities.find(f => f.id === modal.fid);
+                                const bldg = BUILDINGS[fac.key];
+                                const aKey = Object.keys(ANIMALS).find(k => ANIMALS[k].building === bldg.type);
+                                const anim = ANIMALS[aKey];
+                                
+                                return (
+                                    <div className="space-y-6">
+                                        <div className="p-4 bg-slate-800 rounded-lg flex justify-between items-center">
+                                            <span className="text-slate-400">{anim.name} Market Price</span>
+                                            <span className="text-emerald-400 font-mono font-bold">${anim.cost.toLocaleString()}/head</span>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-slate-500 uppercase font-bold mb-2 block">Quantity</label>
+                                            <input type="number" className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-lg focus:outline-none focus:border-blue-500 font-mono text-lg" onChange={(e)=>setSellAmount(e.target.value)} />
+                                        </div>
+                                        <button onClick={()=>buyAnim(modal.fid, aKey, parseInt(sellAmount))} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-xl font-bold shadow-lg transition-all">
+                                            Purchase for ${anim.cost * (parseInt(sellAmount)||0)}
+                                        </button>
+                                    </div>
+                                )
+                            })()}
 
                             {modal.type === 'field' && (
                                 <div className="space-y-6">
