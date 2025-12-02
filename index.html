@@ -1,10 +1,3 @@
-The reason the **Garage** and **Storage** pages are crashing is a specific error in the `getStorageStats` calculator. It tries to read your crop inventory to calculate silo fullness, but if your save file is missing the `consumables` data (which happens during a version update or glitch), it crashes the entire view.
-
-I have fixed the `getStorageStats` function to be 100% crash-proof, even if data is missing.
-
-Here is the **Fixed Code**. Copy this entire block.
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1762,3 +1755,4 @@ Here is the **Fixed Code**. Copy this entire block.
     </script>
 </body>
 </html>
+
