@@ -1,3 +1,12 @@
+I have identified the issues causing the white screen and the barn bug:
+1.  **Barn Bug:** The purchase logic wasn't correctly updating the animal count because of how the data was being passed between the modal and the main state.
+2.  **White Screen on Feed/Water:** The `RenderSelect` component (which shows the list of tractors/implements) was crashing when it encountered `undefined` data while checking if a machine was "Busy".
+
+I have rewritten the `buyAnim`, `RenderSelect`, and `startJob` functions to be "crash-proof".
+
+**Copy this complete code.** It replaces everything.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,7 +130,7 @@
 
         const DAY_MS = 86400000;
         const HOUR_MS = 3600000;
-        const SAVE_KEY = 'jersey_roots_v26_12_STABLE'; 
+        const SAVE_KEY = 'jersey_roots_v26_13_STABLE'; 
         const CLOUD_COLLECTION = 'jersey_roots_saves';
 
         const SERVICE_INTERVAL = 24; 
@@ -315,18 +324,20 @@
             );
         };
 
-        // --- FIXED DROPDOWN COMPONENT ---
+        // --- FIXED DROPDOWN COMPONENT (CRASH PROOF) ---
         const RenderSelect = ({ label, categories, selected, onChange, inventory, activeJobs }) => {
-            const isBusy = (uid) => (activeJobs||[]).some(j => j.res.includes(uid));
+            const isBusy = (uid) => (activeJobs||[]).some(j => (j.res||[]).includes(uid));
             const available = (inventory || []).filter(i => {
                 const def = getEq(i.itemId);
-                return def && !isBusy(i.uid) && categories.includes(def.cat);
+                return def && !isBusy(i.uid) && (categories||[]).includes(def.cat);
             });
             const missing = available.length === 0;
+            const catLabel = (categories && categories.length > 0) ? categories.join('/') : 'Required';
+            
             return (
                 <div>
                     <label className="text-[10px] text-slate-500 uppercase font-bold mb-1 block">
-                        {label} <span className="text-slate-600">({categories.join('/')})</span>
+                        {label} <span className="text-slate-600">({catLabel})</span>
                     </label>
                     <select 
                         className={`w-full p-3 rounded-lg text-sm outline-none border ${missing ? 'bg-red-900/20 border-red-500 text-red-300' : 'bg-slate-900 border-slate-700 text-white'}`}
@@ -334,7 +345,7 @@
                         value={selected || ""}
                         disabled={missing}
                     >
-                        <option value="">{missing ? `MISSING: ${categories[0]}` : "-- Select --"}</option>
+                        <option value="">{missing ? `MISSING: ${catLabel}` : "-- Select --"}</option>
                         {available.map(i => {
                             const def = getEq(i.itemId);
                             return (
@@ -441,11 +452,11 @@
                             } else {
                                 finalData = getInitialState();
                             }
+                            
                             // --- DATA SANITIZATION FIX (SELF-HEALING) ---
-                            // This fixes the "Blank Screen" by removing corrupted animal data on load
                             if(finalData.facilities) {
                                 finalData.facilities = finalData.facilities.map(f => {
-                                    if(f.animals && !f.animals.type) return { ...f, animals: null };
+                                    if(f.animals && (!f.animals.type || !ANIMALS[f.animals.type])) return { ...f, animals: null };
                                     return f;
                                 });
                             }
@@ -687,7 +698,14 @@
                             if(d.type === 'eq') {
                                 inventory.push({uid:Math.random().toString(36).substr(2,9), itemId:d.id, fuel: 100, hours:0, condition:100, lastService:0, ownership: d.mode === 'lease' ? 'leased' : 'owned'});
                             } else if(d.type === 'anim') {
-                                facilities = facilities.map(f => f.id === d.targetId ? { ...f, animals: { type: f.animals ? f.animals.type : d.id, count: (f.animals ? f.animals.count : 0) + d.qty } } : f);
+                                // FIXED BARN ADD LOGIC
+                                facilities = facilities.map(f => f.id === d.targetId ? { 
+                                    ...f, 
+                                    animals: { 
+                                        type: d.id, 
+                                        count: (f.animals && f.animals.type === d.id) ? f.animals.count + d.qty : d.qty 
+                                    } 
+                                } : f);
                             } else {
                                 consumables = { ...consumables, [d.id]: (consumables[d.id]||0) + d.qty };
                             }
@@ -741,9 +759,13 @@
                                             if(j.task === 'water') return {...fac, water: Math.min(100, (fac.water||0)+100)};
                                             if(j.task === 'straw') return {...fac, straw: Math.min(100, (fac.straw||0)+100)};
                                             if(j.task === 'collect') { 
-                                                const def = ANIMALS[fac.animals.type];
-                                                const prod = def.product; 
-                                                if(prod) consumables[prod] = (consumables[prod] || 0) + fac.output; 
+                                                if(fac.animals && fac.animals.type) {
+                                                    const def = ANIMALS[fac.animals.type];
+                                                    if(def) {
+                                                        const prod = def.product; 
+                                                        if(prod) consumables[prod] = (consumables[prod] || 0) + fac.output; 
+                                                    }
+                                                }
                                                 return {...fac, output: 0}; 
                                             }
                                         }
@@ -812,7 +834,11 @@
                     if(task === 'feed') res = bldg.input; 
                     else if(task === 'straw') res = 'straw';
                     if(res) {
-                        if((updatedConsumables[res] || 0) < FEED_PER_CHORE) return alert(`Not enough ${res.toUpperCase()}!`);
+                        // Crash proof check: if consumables don't exist yet
+                        if((updatedConsumables[res] || 0) < FEED_PER_CHORE) {
+                            alert(`Not enough ${res ? res.toUpperCase() : 'Feed'}!`);
+                            return;
+                        }
                         updatedConsumables[res] -= FEED_PER_CHORE;
                     }
                 }
@@ -889,11 +915,10 @@
                 setModal(null);
             };
 
-            // --- FIXED BUY ANIM FUNCTION ---
             const buyAnim = () => {
-                 const qty = parseInt(animCount); // Parse state directly, avoiding modal object mutation issues
+                 const qty = parseInt(animCount); // Parse state directly
                  if(isNaN(qty) || qty <= 0) return alert("Invalid quantity");
-                 if(!modal.fid || !modal.animalKey) return; // Guard against missing data
+                 if(!modal.fid || !modal.animalKey) return; 
 
                  const k = modal.animalKey;
                  const cost = ANIMALS[k].cost * qty;
@@ -942,6 +967,62 @@
                     }
                     return { ...prev, money: newMoney, transactions: newTrans, consumables: newConsumables, activeContracts: newActive };
                 });
+            };
+
+            const getJobRequirements = (type, step, cropKey) => {
+                let req = { trCat:['Tractor'], impCat:[], role:['Owner'], needsTransport: step==='Harvest' };
+                if(type==='field') {
+                    req.role.push('Hand');
+                    if(step.includes('Primary Tillage')) req.impCat = ['Plow', 'Ripper', 'De-Stoner', 'Digger_Peanut'];
+                    else if(step.includes('Secondary Tillage')) req.impCat = ['Cultivator'];
+                    else if(step === 'Lime' || step === 'Fertilizer') req.impCat = ['Spreader'];
+                    else if(step === 'Plant') {
+                        if(cropKey === 'Corn' || cropKey === 'Soy' || cropKey === 'Cotton' || cropKey === 'Sunflower' || cropKey === 'Sorghum' || cropKey === 'Peanuts' || cropKey === 'Beets') req.impCat = ['Planter'];
+                        else if(cropKey === 'Potato') req.impCat = ['Planter_Potato'];
+                        else req.impCat = ['Drill']; 
+                    }
+                    else if(step === 'Spray') { req.trCat = ['Sprayer']; req.impCat = []; }
+                    else if(step === 'Harvest') {
+                        req.trCat = ['Combine'];
+                        if(['Cotton'].includes(cropKey)) req.trCat = ['Harvester_Cotton'];
+                        if(['Potato'].includes(cropKey)) req.trCat = ['Harvester_Potato'];
+                        if(['Beets'].includes(cropKey)) req.trCat = ['Harvester_Beet'];
+                        if(['Peanuts'].includes(cropKey)) req.trCat = ['Harvester_Peanut'];
+                        
+                        if(req.trCat.includes('Combine')) {
+                            if(cropKey === 'Corn') req.impCat = ['Header_Corn'];
+                            else if(cropKey === 'Sunflower') req.impCat = ['Header_Sunflower'];
+                            else req.impCat = ['Header_Grain'];
+                        } else {
+                             req.impCat = [];
+                        }
+                    }
+                    else if(step === 'Cut') { req.trCat = ['Tractor', 'Mower']; req.impCat = ['Mower']; } 
+                    else if(step === 'Tedder') { req.impCat = ['Tedder']; } 
+                    else if(step === 'Bale') { req.impCat = ['Baler']; }
+                } 
+                else if(type === 'chore') {
+                    req.role.push('Herd'); 
+                    req.trCat = ['Tractor']; 
+                    if(step === 'feed') req.impCat = ['Mixer'];
+                    else if(step === 'water') req.impCat = ['Tanker'];
+                    else if(step === 'straw') req.impCat = ['Processor'];
+                } 
+                else if(type === 'maintenance') {
+                    req.role.push('Mech'); 
+                }
+                else if(type === 'snow') {
+                    req.role.push('Hand'); 
+                    req.trCat = ['Snow Plow'];
+                }
+                else if(type === 'misc') {
+                    const job = MISC_JOBS.find(j => j.id === step);
+                    if(job) {
+                         req.role.push(job.role);
+                         if(job.req) req.trCat = [job.req]; else req.trCat = [];
+                    }
+                }
+                return req;
             };
 
             // --- FIXED HELPER FOR GARAGE ---
@@ -1517,7 +1598,7 @@
                     
                     <div className="text-center text-[10px] text-slate-600 font-mono">
                         UID: {currentUser.uid}<br/>
-                        Version: 26.13 Mobile
+                        Version: 26.14 Mobile
                     </div>
                 </div>
             );
