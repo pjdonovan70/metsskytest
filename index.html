@@ -121,7 +121,7 @@
 
         const DAY_MS = 86400000;
         const HOUR_MS = 3600000;
-        const SAVE_KEY = 'jersey_roots_v26_11_STABLE'; 
+        const SAVE_KEY = 'jersey_roots_v26_12_STABLE'; 
         const CLOUD_COLLECTION = 'jersey_roots_saves';
 
         const SERVICE_INTERVAL = 24; 
@@ -440,6 +440,14 @@
                                 finalData = localData;
                             } else {
                                 finalData = getInitialState();
+                            }
+                            // --- DATA SANITIZATION FIX (SELF-HEALING) ---
+                            // This fixes the "Blank Screen" by removing corrupted animal data on load
+                            if(finalData.facilities) {
+                                finalData.facilities = finalData.facilities.map(f => {
+                                    if(f.animals && !f.animals.type) return { ...f, animals: null };
+                                    return f;
+                                });
                             }
                             setGameState(finalData);
                         } catch(e) { console.error("Load Error", e); setGameState(getInitialState()); }
@@ -854,8 +862,8 @@
             };
 
             const sellAnim = () => {
-                if(!modal.fid || !modal.qty) return;
-                const qty = parseInt(modal.qty);
+                const qty = parseInt(animCount); // Use numeric state directly
+                if(!modal.fid || !qty || isNaN(qty)) return;
                 const fac = gameState.facilities.find(f => f.id === modal.fid);
                 if(qty > fac.animals.count) return alert("Not enough animals");
                 
@@ -881,9 +889,12 @@
                 setModal(null);
             };
 
+            // --- FIXED BUY ANIM FUNCTION ---
             const buyAnim = () => {
-                 if(!modal.fid || !modal.qty) return;
-                 const qty = parseInt(modal.qty);
+                 const qty = parseInt(animCount); // Parse state directly, avoiding modal object mutation issues
+                 if(isNaN(qty) || qty <= 0) return alert("Invalid quantity");
+                 if(!modal.fid || !modal.animalKey) return; // Guard against missing data
+
                  const k = modal.animalKey;
                  const cost = ANIMALS[k].cost * qty;
                  if(gameState.money < cost) return alert("Funds");
@@ -1209,8 +1220,17 @@
                     {gameState.facilities.filter(f=>BUILDINGS[f.key] && BUILDINGS[f.key].category==='Livestock').map(f => {
                         const activeJob = getJobProgress(f.id);
                         const bldg = BUILDINGS[f.key];
+                        // Safety Check: Ensure valid type exists
                         const validAnimalKey = Object.keys(ANIMALS).find(k => ANIMALS[k].building === bldg.type);
-                        const animalName = validAnimalKey ? ANIMALS[validAnimalKey].name : 'Unknown';
+                        
+                        // Safety Check: If f.animals exists but has bad type, fallback
+                        let animalName = 'Unknown';
+                        if(f.animals && f.animals.type && ANIMALS[f.animals.type]) {
+                            animalName = ANIMALS[f.animals.type].name;
+                        } else if (validAnimalKey) {
+                            animalName = ANIMALS[validAnimalKey].name;
+                        }
+
                         return (
                             <div key={f.id} className="glass-panel p-4 mb-4">
                                 <div className="flex justify-between items-start mb-2">
@@ -1225,7 +1245,7 @@
                                     </div>
                                 </div>
                                 <div className="text-xs text-slate-400 mb-2">
-                                    {f.animals ? `${f.animals.count} ${animalName}` : 'Empty'}
+                                    {f.animals && f.animals.type ? `${f.animals.count} ${animalName}` : 'Empty'}
                                 </div>
                                 {f.animals && (
                                     <div className="space-y-2">
@@ -1341,11 +1361,9 @@
                         <div className="grid grid-cols-1 gap-4">
                             {(gameState.inventory || []).filter(i => i.hours !== undefined).map(i => {
                                 const activeJob = getJobProgress(i.uid);
-                                const def = getEq(i.itemId);
-                                if (!def) return null;
                                 return (
                                     <div key={i.uid} className="glass-panel p-4">
-                                        <div className="text-white font-bold">{def.name}</div>
+                                        <div className="text-white font-bold">{getEq(i.itemId)?.name}</div>
                                         <div className="text-xs text-slate-400">Cond: {Math.floor(i.condition)}%</div>
                                         
                                         {activeJob ? (
@@ -1499,7 +1517,7 @@
                     
                     <div className="text-center text-[10px] text-slate-600 font-mono">
                         UID: {currentUser.uid}<br/>
-                        Version: 26.11 Mobile
+                        Version: 26.13 Mobile
                     </div>
                 </div>
             );
@@ -1519,8 +1537,8 @@
                                 <h2 className="text-xl font-bold text-white mb-2">Buy {ANIMALS[modal.animalKey].name}</h2>
                                 <p className="text-slate-400 mb-4 text-xs">Cost: ${cost}/head</p>
                                 <input type="number" className="w-full bg-slate-900 border border-slate-700 p-3 rounded text-white mb-4" placeholder="Quantity..." value={animCount} onChange={e => setAnimCount(e.target.value)} />
-                                <div className="text-white text-sm mb-4">Total: ${(animCount*cost).toLocaleString()}</div>
-                                <button onClick={() => { modal.qty = animCount; buyAnim(); }} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg">PURCHASE</button>
+                                <div className="text-white text-sm mb-4">Total: ${(parseInt(animCount||0)*cost).toLocaleString()}</div>
+                                <button onClick={() => buyAnim()} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg">PURCHASE</button>
                             </div>
                         </div>
                     );
@@ -1534,7 +1552,7 @@
                                 <h2 className="text-xl font-bold text-white mb-2">Sell Animals</h2>
                                 <p className="text-slate-400 mb-4 text-xs">You get 60% of original value back.</p>
                                 <input type="number" className="w-full bg-slate-900 border border-slate-700 p-3 rounded text-white mb-4" placeholder="Quantity to sell..." value={animCount} onChange={e => setAnimCount(e.target.value)} />
-                                <button onClick={() => { modal.qty = animCount; sellAnim(); }} className="w-full bg-red-600 text-white font-bold py-3 rounded-lg">CONFIRM SALE</button>
+                                <button onClick={() => sellAnim()} className="w-full bg-red-600 text-white font-bold py-3 rounded-lg">CONFIRM SALE</button>
                             </div>
                         </div>
                     );
@@ -1755,4 +1773,3 @@
     </script>
 </body>
 </html>
-
